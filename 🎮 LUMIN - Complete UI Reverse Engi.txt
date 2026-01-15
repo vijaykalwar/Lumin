@@ -1,0 +1,1918 @@
+🎮 LUMIN - Complete UI Reverse Engineering Document
+PAGE-BY-PAGE BREAKDOWN
+📄 PAGE 1: Authentication Page (/auth)
+Layout Structure
+┌─────────────────────────────────────────────────────────────┐
+│                    FULL SCREEN CONTAINER                     │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              ANIMATED BACKGROUND LAYERS                  │ │
+│  │    ○ Grid Pattern (opacity-20)                          │ │
+│  │    ○ Purple Gradient Blob (top-left)                    │ │
+│  │    ○ Pink Gradient Blob (bottom-right)                  │ │
+│  │    ○ Cyan Gradient Blob (center)                        │ │
+│  │    ○ Floating Particles (4 dots)                        │ │
+│  │  ┌─────────────────────────────────────────────────────┐│ │
+│  │  │                    LOGO                              ││ │
+│  │  │     [⚡ Icon] LUMIN                                  ││ │
+│  │  │     "Continue your journey"                          ││ │
+│  │  ├─────────────────────────────────────────────────────┤│ │
+│  │  │                AUTH CARD (glass-card)                ││ │
+│  │  │  ┌────────────────┬────────────────┐                ││ │
+│  │  │  │     Login      │    Sign Up     │  (Mode Tabs)   ││ │
+│  │  │  └────────────────┴────────────────┘                ││ │
+│  │  │                                                      ││ │
+│  │  │  [👤] Display Name (signup only)                     ││ │
+│  │  │  [📧] Email                                          ││ │
+│  │  │  [🔒] Password [👁]                                   ││ │
+│  │  │  [🔑] Confirm Password (signup only)                 ││ │
+│  │  │                                                      ││ │
+│  │  │  [════════ Enter the Arena ════════]                 ││ │
+│  │  │                                                      ││ │
+│  │  │  ─────────────────────────────────                   ││ │
+│  │  │  ✨ Gamify your growth. Level up ✨                  ││ │
+│  │  └─────────────────────────────────────────────────────┘│ │
+│  │  ┌─────────────────────────────────────────────────────┐│ │
+│  │  │     +100 XP for joining today! (signup badge)       ││ │
+│  │  └─────────────────────────────────────────────────────┘│ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+Exact Specifications
+Background Elements
+Element	Class/Style	Value
+Container	min-h-screen bg-background relative overflow-hidden flex items-center justify-center	Full viewport
+Grid Pattern	absolute inset-0 grid-pattern opacity-20	50px × 50px grid
+Purple Blob	w-[500px] h-[500px] bg-neon-purple/20 rounded-full blur-[120px] animate-pulse	Top-left
+Pink Blob	w-[500px] h-[500px] bg-neon-pink/20 rounded-full blur-[120px] animate-pulse	Bottom-right, 1s delay
+Cyan Blob	w-[600px] h-[600px] bg-neon-cyan/10 rounded-full blur-[150px]	Center
+Floating Particles	w-2 h-2 to w-4 h-4, rounded-full animate-float	Various delays
+Logo Section
+Element	Class	Value
+Container	text-center mb-8	32px margin-bottom
+Icon Container	p-3 rounded-2xl bg-gradient-to-br from-neon-purple to-neon-pink animate-pulse neon-glow-purple	12px padding
+Icon	w-8 h-8 text-foreground	Zap icon, 32px
+Title	text-4xl font-display font-bold gradient-text	Orbitron, 36px
+Subtitle	text-muted-foreground font-body text-lg	Inter, 18px
+Auth Card
+Property	Value
+Class	glass-card p-8 rounded-2xl animated-border
+Padding	32px
+Border Radius	16px (1rem)
+Background	linear-gradient(145deg, hsl(222 47% 10%) 0%, hsl(222 47% 7%) 100%)
+Backdrop Filter	blur(12px)
+Animated Border	4s linear infinite gradient flow
+Mode Tabs
+Element	Active State	Inactive State
+Container	flex gap-2 mb-8 p-1 bg-surface-2 rounded-xl	-
+Button	variant="gaming"	variant="ghost" text-muted-foreground
+Size	flex-1	Same
+Input Fields
+Property	Value
+Height	h-12 (48px)
+Background	bg-surface-2
+Border	border-surface-3
+Focus Border (Email)	focus:border-neon-purple focus:ring-neon-purple/20
+Focus Border (Password)	focus:border-neon-pink focus:ring-neon-pink/20
+Focus Border (Confirm)	focus:border-neon-green focus:ring-neon-green/20
+Focus Border (Name)	focus:border-neon-cyan focus:ring-neon-cyan/20
+Transition	transition-all
+Labels
+Property	Value
+Class	text-foreground flex items-center gap-2 text-sm font-medium
+Icon Size	w-4 h-4
+Icon Colors	Purple (email), Pink (password), Cyan (name), Green (confirm)
+Error Messages
+Property	Value
+Class	text-sm text-neon-orange flex items-center gap-1
+Indicator	w-1 h-1 rounded-full bg-neon-orange
+Submit Button
+Property	Value
+Class	w-full btn-gaming group h-12 text-base
+Height	48px
+Loading Spinner	w-5 h-5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin
+XP Signup Badge
+Property	Value
+Class	inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2/80 border border-neon-green/30 backdrop-blur-sm
+XP Text	text-neon-green text-sm font-bold
+📄 PAGE 2: Dashboard (/dashboard)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN CONTAINER (pt-20 pb-12 px-4, max-w-7xl mx-auto)                   │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  WELCOME HEADER                                                      ││
+│  │  "Welcome back, [Name]!" + Streak Message                           ││
+│  │  [Create Goal] [Journal]                                             ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────┬───────────────────────────┐│
+│  │           LEFT COLUMN (lg:col-span-2)    │    RIGHT COLUMN          ││
+│  │  ┌─────────────────────────────────────┐ │ ┌─────────────────────┐  ││
+│  │  │     LEVEL PROGRESS (glass-card)     │ │ │   STREAK DISPLAY    │  ││
+│  │  │     XP Progress Bar                  │ │ │   + Week Calendar   │  ││
+│  │  └─────────────────────────────────────┘ │ └─────────────────────┘  ││
+│  │  ┌────┬────┬────┬────┐                   │ ┌─────────────────────┐  ││
+│  │  │Str │Ent │Foc │Tim │ STATS GRID       │ │   MOOD PICKER       │  ││
+│  │  └────┴────┴────┴────┘                   │ │   + Quick Entry     │  ││
+│  │  ┌─────────────────────────────────────┐ │ └─────────────────────┘  ││
+│  │  │      WEEKLY ACTIVITY CHART          │ │ ┌─────────────────────┐  ││
+│  │  │      Bar Chart (7 days)              │ │ │   AI COACH          │  ││
+│  │  └─────────────────────────────────────┘ │ │   (animated-border)  │  ││
+│  │  ┌─────────────────────────────────────┐ │ └─────────────────────┘  ││
+│  │  │        ACTIVE GOALS                  │ │ ┌─────────────────────┐  ││
+│  │  │        Goal Cards (3 max)            │ │ │   BADGES            │  ││
+│  │  └─────────────────────────────────────┘ │ │   (3 columns)        │  ││
+│  │  ┌─────────────────────────────────────┐ │ └─────────────────────┘  ││
+│  │  │        RECENT JOURNAL               │ │                          ││
+│  │  │        Entry Cards (2 max)          │ │                          ││
+│  │  └─────────────────────────────────────┘ │                          ││
+│  └─────────────────────────────────────────┴───────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Main Container
+Property	Value
+Class	pt-20 pb-12 px-4
+Inner	max-w-7xl mx-auto
+Padding Top	80px (navbar offset)
+Padding Bottom	48px
+Max Width	1280px
+Welcome Header
+Element	Class
+Container	mb-8 animate-fade-in
+Flex Container	flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6
+Title	font-display font-bold text-3xl md:text-4xl mb-2
+Gradient Name	gradient-text
+Subtitle	text-muted-foreground
+Main Grid
+Property	Value
+Class	grid lg:grid-cols-3 gap-6
+Gap	24px
+Breakpoint	1024px (lg)
+Glass Cards
+Property	Value
+Class	glass-card p-6
+Padding	24px
+Animation	animate-fade-in-up with staggered delays
+Animation Delays	0s, 0.1s, 0.2s, 0.3s, 0.4s
+Stats Grid
+Property	Value
+Class	grid grid-cols-2 md:grid-cols-4 gap-4
+Gap	16px
+Breakpoint	768px (md)
+StatCard Component
+Property	Value
+Class	glass-card p-5 stat-card
+Padding	20px
+Icon Container	p-2.5 rounded-xl (10px padding)
+Icon Size	w-5 h-5
+Value	text-2xl font-display font-bold
+Title	text-sm text-muted-foreground mb-1
+Subtitle	text-xs text-muted-foreground mt-1
+Hover Effect	transform: translateY(-4px) + glow
+Stat Card Variants (Icon Background Colors)
+Variant	Icon BG	Icon Color
+purple	bg-primary/20	text-neon-purple
+pink	bg-accent/20	text-neon-pink
+cyan	bg-neon-cyan/20	text-neon-cyan
+green	bg-neon-green/20	text-neon-green
+orange	bg-neon-orange/20	text-neon-orange
+Goal Card (Dashboard)
+Property	Value
+Container	flex items-center gap-4 p-4 rounded-xl bg-surface-2 border border-border/50
+Hover	hover:border-primary/30 transition-colors
+Priority Icon Container	p-2 rounded-lg
+Progress Bar	h-1.5 flex-1 max-w-20
+Weekly Activity Chart
+Property	Value
+Container Height	h-40 (160px)
+Bar Container	flex items-end justify-between gap-2
+Bar	w-full max-w-8 rounded-t bg-gradient-primary
+Day Label	text-xs text-muted-foreground
+📄 PAGE 3: Goals (/goals)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN CONTAINER (container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-12)   │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  HEADER                                                              ││
+│  │  🎯 My Goals                     [Templates] [+ Create Goal]        ││
+│  │  "Track your daily goals..."                                         ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  CATEGORY FILTER (horizontal scroll)                                 ││
+│  │  [All] [Health] [Work] [Learning] [Personal] [Finance] [Fitness]   ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌──────────────────────────────────────────────┬──────────────────────┐│
+│  │           GOALS COLUMN                        │    SIDEBAR          ││
+│  │  ┌──────────────────────────────────────────┐│ ┌─────────────────┐ ││
+│  │  │          ACTIVE GOALS                     ││ │ Goal Insights   │ ││
+│  │  │          Goal Cards (grid)                ││ │ (AI Panel)      │ ││
+│  │  └──────────────────────────────────────────┘│ ├─────────────────┤ ││
+│  │  ┌──────────────────────────────────────────┐│ │ Goal Analytics  │ ││
+│  │  │          PAUSED GOALS                     ││ │ (Stats Panel)   │ ││
+│  │  └──────────────────────────────────────────┘│ ├─────────────────┤ ││
+│  │  ┌──────────────────────────────────────────┐│ │ Notifications   │ ││
+│  │  │          COMPLETED GOALS                  ││ │ (Settings)      │ ││
+│  │  └──────────────────────────────────────────┘│ └─────────────────┘ ││
+│  └──────────────────────────────────────────────┴──────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Category Filter
+Property	Value
+Container	mb-6 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0
+Inner	flex gap-2 min-w-max
+Button	shrink-0 gap-1
+Active	variant="default"
+Inactive	variant="outline"
+Category Colors
+Category	Color Class
+General	bg-muted text-muted-foreground
+Health	bg-pink-500/20 text-pink-400
+Work	bg-blue-500/20 text-blue-400
+Learning	bg-purple-500/20 text-purple-400
+Personal	bg-green-500/20 text-green-400
+Finance	bg-yellow-500/20 text-yellow-400
+Fitness	bg-orange-500/20 text-orange-400
+Goal Card
+Property	Value
+Class	glass-card group hover:border-primary/50 transition-all duration-300
+Content Padding	p-3 sm:p-4
+Title	font-semibold text-foreground mb-1 truncate
+Description	text-sm text-muted-foreground mb-3 line-clamp-2
+Progress Bar	h-2
+Progress Buttons	text-xs h-7 px-2 flex-1 min-w-[40px]
+Action Buttons	h-8 w-8
+Priority Badge Colors
+Priority	Class
+High	bg-destructive/20 text-destructive border-destructive/50
+Medium	bg-warning/20 text-warning border-warning/50
+Low	bg-primary/20 text-primary border-primary/50
+Create Goal Dialog
+Property	Value
+Container	glass-card max-w-md mx-auto max-h-[90vh] overflow-y-auto
+Input	pointer-events-auto (critical for z-index fix)
+Select Content	pointer-events-auto z-[100]
+📄 PAGE 4: Journal (/journal)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN (pt-20 pb-12 px-4, max-w-7xl)                                      │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  HEADER                                                              ││
+│  │  📖 Journal                              [+ New Entry]              ││
+│  │  "Capture your thoughts, track your growth"                          ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌────────────────────┬────────────────────────────────────────────────┐│
+│  │   ENTRY LIST       │              DETAIL VIEW                        ││
+│  │   (lg:col-span-1)  │              (lg:col-span-2)                   ││
+│  │ ┌────────────────┐ │ ┌────────────────────────────────────────────┐ ││
+│  │ │ 🔍 Search      │ │ │              ENTRY DETAIL                   │ ││
+│  │ └────────────────┘ │ │   😊 Entry Title                            │ ││
+│  │ ┌────────────────┐ │ │   📅 Date     +25 XP                        │ ││
+│  │ │ Entry Card 1   │ │ │                                             │ ││
+│  │ │ 😊 Title       │ │ │   Content text...                          │ ││
+│  │ │ 📅 Date +XP    │ │ │                                             │ ││
+│  │ │ #tags          │ │ │   #tag1 #tag2 #tag3                        │ ││
+│  │ ├────────────────┤ │ │                                             │ ││
+│  │ │ Entry Card 2   │ │ │   ┌─────────────────────────────────────┐   │ ││
+│  │ ├────────────────┤ │ │   │ ✨ AI Insight                       │   │ ││
+│  │ │ Entry Card 3   │ │ │   │ "Great entry! Keep it up!"          │   │ ││
+│  │ └────────────────┘ │ │   └─────────────────────────────────────┘   │ ││
+│  │                    │ └────────────────────────────────────────────┘ ││
+│  └────────────────────┴────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Grid Layout
+Property	Value
+Container	grid lg:grid-cols-3 gap-6
+Entry List	lg:col-span-1 space-y-4
+Detail View	lg:col-span-2
+Search Input
+Property	Value
+Container	relative
+Icon	absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground
+Input	pl-10 bg-surface-2 border-surface-3 h-12
+Entry Card
+Property	Value
+Container	glass-card p-4 rounded-xl cursor-pointer transition-all hover:scale-[1.02]
+Selected	ring-2 ring-primary
+Mood Emoji	text-2xl
+Title	font-medium truncate
+Date	text-xs text-muted-foreground
+XP	text-xs text-neon-green
+Tag	text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary
+Entry List Scroll
+Property	Value
+Class	space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2
+Create Form
+Property	Value
+Container	glass-card p-6 rounded-2xl animate-fade-in-up
+Mood Button (inactive)	p-3 rounded-xl bg-surface-2 hover:bg-surface-3
+Mood Button (active)	bg-primary/20 ring-2 ring-primary scale-110
+Emoji Size	text-2xl
+Textarea	bg-surface-2 border-surface-3 min-h-[200px] resize-none
+AI Insight Box
+Property	Value
+Class	p-4 rounded-xl bg-gradient-to-r from-neon-purple/10 to-neon-pink/10 border border-neon-purple/20
+Header Icon	w-4 h-4 text-neon-purple
+Header Text	text-sm font-medium text-neon-purple
+Content	text-sm text-muted-foreground
+📄 PAGE 5: Focus Timer (/focus)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN (pt-20 pb-12 px-4, max-w-4xl mx-auto)                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                         HEADER (centered)                            ││
+│  │                    ⏱️ Focus Timer                                   ││
+│  │                "Stay focused, earn XP, level up"                     ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                    MODE SELECTOR (centered)                          ││
+│  │            [🎯 Focus] [☕ Short Break] [☕ Long Break]              ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                      TIMER CIRCLE (centered)                         ││
+│  │              ╭────────────────────────────────╮                     ││
+│  │             │          ┌──────────┐           │                     ││
+│  │             │          │  25:00   │           │                     ││
+│  │             │          │Focus Time│           │                     ││
+│  │             │          └──────────┘           │                     ││
+│  │              ╰────────────────────────────────╯                     ││
+│  │                    (SVG progress ring)                               ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                       CONTROLS (centered)                            ││
+│  │                    [↺]  [▶ PLAY]  [🔊]                              ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                   SESSION PROGRESS (centered)                        ││
+│  │                    ● ● ○ ○  2/4 until long break                    ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌────────────┬────────────┬────────────┬────────────┐                 │
+│  │ Sessions   │  Minutes   │   Streak   │   Total    │  STATS GRID    │
+│  │  Today     │   Today    │            │  Sessions  │                │
+│  └────────────┴────────────┴────────────┴────────────┘                 │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                        PRO TIPS (glass-card)                         ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Timer Circle
+Property	Value
+Outer Glow	absolute inset-0 rounded-full bg-gradient-to-r opacity-20 blur-2xl scale-110
+Container	glass-card w-72 h-72 md:w-80 md:h-80 rounded-full
+Size	288px × 288px, 320px × 320px on md
+SVG ViewBox	0 0 100 100
+Circle Radius	45
+Stroke Width	4
+Background Circle	stroke="hsl(var(--surface-3))"
+Progress Circle	Dynamic stroke color based on mode
+Stroke Dasharray	${progress * 2.83} 283
+Timer Display
+Property	Value
+Time	font-display font-bold text-6xl md:text-7xl tracking-wider
+Running Glow	text-glow-purple
+Mode Label	text-muted-foreground text-sm mt-2 uppercase tracking-widest
+Control Buttons
+Property	Value
+Reset/Sound	variant="ghost" size="lg" w-14 h-14 rounded-full
+Play/Pause	variant="gaming" size="lg" w-20 h-20 rounded-full text-lg
+Play Icon	w-8 h-8 ml-1
+Pause Icon	w-8 h-8
+Session Indicators
+Property	Value
+Container	flex justify-center gap-2 mb-8
+Dot (active)	w-4 h-4 rounded-full bg-gradient-primary scale-110
+Dot (inactive)	w-4 h-4 rounded-full bg-surface-3
+Text	text-sm text-muted-foreground ml-2
+Stats Grid (Focus)
+Property	Value
+Grid	grid grid-cols-2 md:grid-cols-4 gap-4
+Card	glass-card p-4 rounded-xl text-center
+Icon	w-6 h-6 mx-auto mb-2
+Value	font-display font-bold text-2xl
+Label	text-xs text-muted-foreground
+📄 PAGE 6: Achievements (/achievements)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN (pt-20 pb-12 px-4, max-w-6xl mx-auto)                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                      HEADER (centered)                               ││
+│  │                   🏆 Achievements                                    ││
+│  │           "Your collection of glory and accomplishments"            ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌──────────────────┬──────────────────┬──────────────────┐            │
+│  │    🏅 Earned     │    🔒 Locked     │    ✨ XP Earned   │  STATS    │
+│  │       12         │        8         │      2,500       │            │
+│  └──────────────────┴──────────────────┴──────────────────┘            │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                    CATEGORY FILTER (centered)                        ││
+│  │      [All] [🔥 Streaks] [📖 Journal] [⏱️ Focus] [🎯 Level]         ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────┬─────────────┬─────────────┐                           │
+│  │Achievement 1│Achievement 2│Achievement 3│                           │
+│  │ [Icon/Lock] │ [Icon/Lock] │ [Icon/Lock] │                           │
+│  │ Name [rare] │ Name [epic] │ Name [leg.] │                           │
+│  │ Description │ Description │ Description │                           │
+│  │ Progress/XP │ Progress/XP │ Progress/XP │                           │
+│  └─────────────┴─────────────┴─────────────┘                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                   MOTIVATIONAL SECTION (centered)                    ││
+│  │                       👑 Keep Pushing!                               ││
+│  │                  "You've unlocked 12 of 20..."                       ││
+│  │                     📈 60% Complete                                  ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Stats Row
+Property	Value
+Grid	grid grid-cols-3 gap-4 mb-8
+Card	glass-card p-4 md:p-6 rounded-xl text-center
+Icon	w-6 h-6 md:w-8 md:h-8 mx-auto mb-2
+Value	font-display font-bold text-2xl md:text-3xl
+Label	text-xs md:text-sm text-muted-foreground
+Achievement Card
+Property	Value
+Container	glass-card p-5 rounded-xl border transition-all duration-300
+Earned State	Rarity glow + border
+Locked State	opacity-60
+Icon Container	w-14 h-14 rounded-xl flex items-center justify-center text-3xl
+Rarity Badge	text-xs px-2 py-0.5 rounded-full capitalize bg-gradient-to-r text-white
+Progress Bar	h-2 bg-surface-3 rounded-full overflow-hidden
+Rarity Gradient Colors
+Rarity	Gradient
+Common	from-gray-400 to-gray-500
+Rare	from-blue-400 to-blue-600
+Epic	from-purple-400 to-purple-600
+Legendary	from-yellow-400 to-orange-500
+Rarity Glow Effects
+Rarity	Hover Shadow
+Common	None
+Rare	0 0 20px rgba(59,130,246,0.3)
+Epic	0 0 20px rgba(168,85,247,0.3)
+Legendary	0 0 20px rgba(234,179,8,0.3)
+Motivational Section
+Property	Value
+Container	glass-card p-8 rounded-2xl text-center animated-border
+Icon	w-12 h-12 text-neon-yellow mx-auto mb-4
+Title	font-display font-bold text-2xl mb-2 gradient-text
+Text	text-muted-foreground max-w-md mx-auto mb-6
+Progress	text-neon-green font-medium
+📄 PAGE 7: Profile (/profile)
+Exact Specifications
+Avatar
+Property	Value
+Container	w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-primary
+Initial	text-4xl md:text-5xl font-display font-bold text-primary-foreground
+Level Badge	absolute -bottom-2 -right-2 bg-neon-yellow text-black text-sm font-bold px-3 py-1 rounded-full
+Profile Header
+Property	Value
+Container	glass-card p-8 rounded-2xl mb-8
+Flex	flex flex-col md:flex-row items-start md:items-center gap-6
+Name	font-display font-bold text-3xl md:text-4xl gradient-text
+Bio	text-muted-foreground mb-4
+Meta Info	text-sm text-muted-foreground flex items-center gap-1
+Edit Form
+Property	Value
+Name Input	bg-surface-2 border-surface-3 text-xl font-display font-bold
+Bio Textarea	bg-surface-2 border-surface-3 resize-none rows-2
+Account Info Section
+Property	Value
+Container	glass-card p-6 rounded-2xl
+Row	flex items-center justify-between py-3 border-b border-surface-3
+Label	text-muted-foreground
+Value	font-medium
+Quick Actions
+Property	Value
+Grid	grid md:grid-cols-3 gap-4 mt-8
+Button	variant="outline" h-auto py-6 flex flex-col gap-2
+Icon	w-6 h-6
+📄 PAGE 8: Habits (/habits)
+Exact Specifications
+Today's Progress Card
+Property	Value
+Container	glass-card mb-6
+Content Padding	p-4 sm:p-6
+Progress Bar	h-3
+Badge	variant="outline" bg-primary/20 text-primary
+Habit Card
+Property	Value
+Container	glass-card transition-all duration-300
+Completed State	border-green-500/50 bg-green-500/5
+Content Padding	p-4
+Icon	text-3xl
+Title	font-semibold
+Description	text-xs text-muted-foreground line-clamp-1
+Streak Badge	variant="outline" bg-warning/20 text-warning text-xs
+Check-in Button (active)	variant="gaming"
+Check-in Button (done)	variant="outline" with CheckCircle2 text-green-500
+📄 PAGE 9: Vision Board (/vision)
+Exact Specifications
+Vision Card
+Property	Value
+Container	glass-card group hover:border-primary/50 transition-all duration-300
+Content Padding	p-4
+Category Icon	text-2xl
+Title	font-semibold text-lg mb-2
+Description	text-sm text-muted-foreground line-clamp-3 mb-3
+Target Date	text-xs text-muted-foreground flex items-center gap-1
+Achieved Vision Card
+Property	Value
+Container	glass-card border-green-500/30 bg-green-500/5
+Badge	variant="outline" bg-green-500/20 text-green-400 text-xs
+Title	font-semibold text-lg mb-2 line-through opacity-70
+📄 PAGE 10: Social (/social)
+Exact Specifications
+Tabs
+Property	Value
+Container	space-y-6
+TabsList	grid w-full grid-cols-3 max-w-md
+TabsTrigger	gap-2
+Icon	w-4 h-4
+Label	hidden sm:inline
+Content Container	max-w-2xl
+🎨 GLOBAL DESIGN SYSTEM
+1. Color Palette (Exact HSL Values)
+Base Colors
+Token	HSL Value	HEX Equivalent	Usage
+--background	222 47% 6%	#0a0d14	Page background
+--foreground	210 40% 98%	#f8fafc	Primary text
+--card	222 47% 8%	#0f1318	Card backgrounds
+--card-foreground	210 40% 98%	#f8fafc	Card text
+--primary	262 83% 58%	#8b5cf6	Primary actions
+--primary-foreground	210 40% 98%	#f8fafc	Text on primary
+--secondary	222 47% 14%	#1a202c	Secondary elements
+--muted	222 47% 12%	#151a23	Muted backgrounds
+--muted-foreground	215 20% 55%	#7c8594	Muted text
+--accent	330 81% 60%	#ec4899	Accent/Pink
+--destructive	0 84% 60%	#ef4444	Errors/Delete
+--border	222 47% 16%	#1e2633	Borders
+--input	222 47% 14%	#1a202c	Input backgrounds
+--ring	262 83% 58%	#8b5cf6	Focus rings
+Neon Colors
+Token	HSL Value	HEX Equivalent	Usage
+--neon-purple	262 83% 58%	#8b5cf6	Primary neon
+--neon-pink	330 81% 60%	#ec4899	Accent neon
+--neon-cyan	186 100% 50%	#00d4ff	Cyan accent
+--neon-green	142 76% 50%	#22c55e	Success/XP
+--neon-orange	25 95% 53%	#f97316	Streak/Fire
+--neon-yellow	45 100% 51%	#fbbf24	Level/XP
+Surface Colors
+Token	HSL Value	Usage
+--surface-1	222 47% 8%	Darkest surface
+--surface-2	222 47% 11%	Medium surface
+--surface-3	222 47% 14%	Lightest surface
+2. Typography
+Font Families
+Purpose	Font	Fallback	CSS Variable
+Display	Orbitron	sans-serif	--font-display
+Body	Inter	sans-serif	--font-body
+Google Fonts Import
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+Font Sizes (Tailwind Classes)
+Element	Mobile	Desktop	Class
+Page Title	24px	36px	text-2xl sm:text-3xl md:text-4xl
+Section Title	18px	20px	text-lg
+Card Title	16px	18px	font-semibold
+Body Text	14px	16px	text-sm md:text-base
+Small Text	12px	14px	text-xs md:text-sm
+Tiny Text	10px	12px	text-[10px] md:text-xs
+Font Weights
+Weight	Value	Usage
+Light	300	Subtle text
+Regular	400	Body text
+Medium	500	Labels
+Semibold	600	Section headers
+Bold	700	Titles
+Extra Bold	800-900	Display text
+Text Utility Classes
+
+.font-display { font-family: var(--font-display); }
+.font-body { font-family: var(--font-body); }
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: var(--gradient-primary);
+}
+3. Gradients
+Gradient Definitions
+Name	CSS Value
+--gradient-primary	linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(330 81% 60%) 100%)
+--gradient-secondary	linear-gradient(135deg, hsl(186 100% 50%) 0%, hsl(262 83% 58%) 100%)
+--gradient-success	linear-gradient(135deg, hsl(142 76% 50%) 0%, hsl(186 100% 50%) 100%)
+--gradient-fire	linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(45 100% 51%) 100%)
+--gradient-dark	linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 4%) 100%)
+--gradient-card	linear-gradient(145deg, hsl(222 47% 10%) 0%, hsl(222 47% 7%) 100%)
+--gradient-glow	radial-gradient(ellipse at center, hsl(262 83% 58% / 0.15) 0%, transparent 70%)
+Tailwind Utility Classes
+
+.bg-gradient-primary { background: var(--gradient-primary); }
+.bg-gradient-secondary { background: var(--gradient-secondary); }
+.bg-gradient-success { background: var(--gradient-success); }
+.bg-gradient-fire { background: var(--gradient-fire); }
+4. Shadows
+Shadow Definitions
+Name	CSS Value
+--shadow-sm	0 2px 8px hsl(222 47% 4% / 0.5)
+--shadow-md	0 4px 16px hsl(222 47% 4% / 0.6)
+--shadow-lg	0 8px 32px hsl(222 47% 4% / 0.7)
+--shadow-glow-purple	0 0 20px hsl(262 83% 58% / 0.4), 0 0 40px hsl(262 83% 58% / 0.2)
+--shadow-glow-pink	0 0 20px hsl(330 81% 60% / 0.4), 0 0 40px hsl(330 81% 60% / 0.2)
+--shadow-glow-cyan	0 0 20px hsl(186 100% 50% / 0.4), 0 0 40px hsl(186 100% 50% / 0.2)
+5. Border Radius
+Token	Value
+--radius	0.75rem (12px)
+rounded-lg	12px
+rounded-md	10px
+rounded-sm	8px
+rounded-xl	12px
+rounded-2xl	16px
+rounded-full	9999px
+6. Spacing System (8px Base)
+Class	Value	Pixels
+p-1	0.25rem	4px
+p-2	0.5rem	8px
+p-3	0.75rem	12px
+p-4	1rem	16px
+p-5	1.25rem	20px
+p-6	1.5rem	24px
+p-8	2rem	32px
+p-12	3rem	48px
+gap-1	0.25rem	4px
+gap-2	0.5rem	8px
+gap-3	0.75rem	12px
+gap-4	1rem	16px
+gap-6	1.5rem	24px
+mb-2	0.5rem	8px
+mb-4	1rem	16px
+mb-6	1.5rem	24px
+mb-8	2rem	32px
+7. Breakpoints
+Breakpoint	Value	Usage
+sm	640px	Mobile landscape
+md	768px	Tablet
+lg	1024px	Desktop
+xl	1280px	Large desktop
+2xl	1400px	Container max
+8. Navbar Specifications
+Property	Value
+Position	fixed top-0 left-0 right-0 z-50
+Border	border-b border-border/50
+Background	bg-background/80 backdrop-blur-xl
+Height	h-16 (64px)
+Container	container mx-auto px-4
+Logo Icon	w-8 h-8
+Logo Text	font-display font-bold text-xl tracking-wider
+Nav Links (Desktop)	flex items-center gap-1
+Nav Link	px-4 py-2 rounded-lg text-sm font-medium
+Nav Link Active	bg-primary/20 text-primary
+Nav Link Inactive	text-muted-foreground hover:text-foreground hover:bg-muted
+Streak Badge	px-3 py-1.5 rounded-lg bg-surface-2
+XP Bar Width	w-32
+Level Badge	level-badge w-8 h-8 rounded-full
+Mobile Menu Button	md:hidden p-2
+9. Button Specifications
+Button Variants (from button.tsx)
+Variant	Styles
+default	bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:-translate-y-0.5
+destructive	bg-destructive text-destructive-foreground shadow-md hover:bg-destructive/90
+outline	border-2 border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary
+secondary	bg-secondary text-secondary-foreground hover:bg-secondary/80
+ghost	text-foreground hover:bg-muted
+link	text-primary underline-offset-4 hover:underline
+gaming	font-display tracking-wider uppercase bg-gradient-to-r from-primary to-accent hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] hover:-translate-y-1
+neon	bg-transparent border-2 border-primary text-primary font-display tracking-wider uppercase
+success	bg-gradient-to-r from-[hsl(var(--neon-green))] to-[hsl(var(--neon-cyan))]
+fire	bg-gradient-to-r from-[hsl(var(--neon-orange))] to-[hsl(var(--neon-yellow))]
+Button Sizes
+Size	Height	Padding	Border Radius
+default	h-11 (44px)	px-5 py-2	rounded-lg
+sm	h-9 (36px)	px-4	rounded-md
+lg	h-12 (48px)	px-8	rounded-xl
+xl	h-14 (56px)	px-10	rounded-xl
+icon	h-10 w-10	-	-
+10. Input Specifications
+Property	Value
+Height	h-10 (40px) default, h-12 (48px) for auth
+Width	w-full
+Border Radius	rounded-md
+Border	border border-input
+Background	bg-background or bg-surface-2
+Padding	px-3 py-2
+Font Size	text-base md:text-sm
+Placeholder	placeholder:text-muted-foreground
+Focus	focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+Disabled	disabled:cursor-not-allowed disabled:opacity-50
+11. Card (Glass-Card) Specifications
+Glass Card Base
+
+.glass-card {
+  @apply relative overflow-hidden rounded-xl border border-border/50;
+  background: linear-gradient(145deg, hsl(var(--surface-2)) 0%, hsl(var(--surface-1)) 100%);
+  backdrop-filter: blur(12px);
+}
+
+.glass-card::before {
+  content: '';
+  @apply absolute inset-0 opacity-50 pointer-events-none;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, transparent 50%);
+}
+Card Padding by Context
+Context	Padding
+Stat Card	p-5 (20px)
+Section Card	p-6 (24px)
+Profile Header	p-8 (32px)
+Empty State	p-8 or p-12
+12. Animations
+Keyframe Animations
+
+/* Fade In */
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade In Up */
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Float */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Pulse Glow */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.3); }
+}
+
+/* Glow Pulse */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.3); }
+}
+
+/* Fire Pulse (Streak) */
+@keyframes fire-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 8px hsl(var(--neon-orange) / 0.8));
+    transform: scale(1);
+  }
+  50% { 
+    filter: drop-shadow(0 0 16px hsl(var(--neon-orange) / 1));
+    transform: scale(1.05);
+  }
+}
+
+/* Border Flow (Animated Border) */
+@keyframes border-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* Shimmer */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Achievement Pop */
+@keyframes achievement-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+Animation Classes
+Class	Duration	Timing
+animate-fade-in	0.5s	ease-out
+animate-fade-in-up	0.6s	ease-out
+animate-scale-in	0.3s	ease-out
+animate-slide-in-right	0.4s	ease-out
+animate-glow-pulse	2s	ease-in-out infinite
+animate-float	3s	ease-in-out infinite
+animate-spin-slow	8s	linear infinite
+animate-bounce-subtle	2s	ease-in-out infinite
+animate-shimmer	2s	linear infinite
+13. Icons (Lucide React)
+Icon Library
+Library: lucide-react
+Default Size: w-4 h-4 (16px) for inline, w-5 h-5 (20px) for buttons
+Large Icons: w-6 h-6 (24px), w-8 h-8 (32px), w-12 h-12 (48px)
+Stroke Width: Default (2)
+Common Icons Used
+Icon Name	Usage
+Zap	Logo, XP, Energy
+Flame	Streak, Fire
+Target	Goals
+Timer	Focus
+BookOpen	Journal
+Trophy	Achievements
+Sparkles	AI, Special
+User	Profile
+Users	Social
+Plus	Create actions
+Edit3	Edit
+Trash2	Delete
+CheckCircle2	Complete
+Calendar	Dates
+ChevronRight	Navigation
+Menu / X	Mobile menu
+Eye / EyeOff	Password toggle
+Loader2	Loading spinner
+14. Special Components
+XP Progress Bar
+
+.xp-bar {
+  @apply relative h-3 rounded-full overflow-hidden;
+  background: hsl(var(--surface-3));
+}
+
+.xp-bar-fill {
+  @apply h-full rounded-full transition-all duration-700 ease-out;
+  background: var(--gradient-primary);
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.6);
+}
+Level Badge
+
+.level-badge {
+  @apply relative inline-flex items-center justify-center;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-glow-purple);
+}
+
+.level-badge::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(135deg, white 0%, transparent 50%);
+  opacity: 0.2;
+}
+Streak Fire
+
+.streak-fire {
+  @apply relative;
+  animation: fire-pulse 1.5s ease-in-out infinite;
+}
+Animated Border
+
+.animated-border {
+  @apply relative;
+}
+
+.animated-border::before {
+  content: '';
+  @apply absolute -inset-[1px] rounded-xl;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--neon-cyan)), hsl(var(--primary)));
+  background-size: 300% 100%;
+  animation: border-flow 4s linear infinite;
+  z-index: -1;
+}
+Grid Pattern Background
+
+.grid-pattern {
+  background-image: 
+    linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+15. Responsive Patterns
+Container Pattern
+
+.container {
+  @apply mx-auto px-4;
+  max-width: 1400px;
+}
+Main Content Pattern
+
+main {
+  @apply pt-20 pb-12 px-4; /* Desktop */
+  @apply sm:pt-24; /* Mobile adjustment */
+}
+Grid Patterns
+Pattern	Mobile	Tablet	Desktop
+Stats	grid-cols-2	md:grid-cols-4	-
+Cards	grid-cols-1	sm:grid-cols-2	lg:grid-cols-3
+Main Layout	grid-cols-1	-	lg:grid-cols-3
+Mobile Menu
+Property	Value
+Display	md:hidden
+Background	bg-background/95 backdrop-blur-xl
+Border	border-t border-border/50
+Padding	py-4 space-y-2
+16. Z-Index Scale
+Layer	Value
+Background elements	-1
+Default content	0
+Floating particles	auto
+Cards	10
+Dropdowns/Selects	50
+Navbar	50
+Modals/Dialogs	50 (default)
+Select Content Override	100
+Toast notifications	100
+17. Complete Tailwind Mapping Summary
+Essential Utility Classes
+
+/* Layout */
+.min-h-screen, .flex, .grid, .items-center, .justify-center, .justify-between
+.flex-col, .flex-1, .gap-2, .gap-4, .gap-6
+.container, .mx-auto, .px-4, .py-2
+
+/* Sizing */
+.w-full, .h-12, .w-8, .h-8, .max-w-md, .max-w-7xl
+
+/* Colors */
+.bg-background, .text-foreground, .text-muted-foreground
+.bg-surface-2, .bg-surface-3, .border-border/50
+
+/* Typography */
+.font-display, .font-body, .font-bold, .font-semibold
+.text-sm, .text-lg, .text-2xl, .text-4xl, .tracking-wider, .uppercase
+
+/* Effects */
+.rounded-xl, .rounded-2xl, .rounded-full
+.shadow-lg, .backdrop-blur-xl, .blur-[120px]
+.transition-all, .duration-300
+
+/* States */
+.hover:scale-[1.02], .hover:-translate-y-0.5, .hover:border-primary/30
+.focus:ring-2, .focus:ring-primary, .disabled:opacity-50
+
+/* Animations */
+.animate-fade-in, .animate-fade-in-up, .animate-pulse, .animate-float, .animate-spin
+
+/* Responsive */
+.sm:text-3xl, .md:grid-cols-4, .lg:col-span-2, .hidden, .md:flex
+This document provides everything needed to recreate the LUMIN UI pixel-perfect. Each specification includes exact values that can be directly used in Tailwind CSS or custom CSS.
+
+Excellent! Now I have all the information I need. Let me compile the complete UI reverse engineering document:
+
+🎮 LUMIN - Complete UI Reverse Engineering Document
+PAGE-BY-PAGE BREAKDOWN
+📄 PAGE 1: Authentication Page (/auth)
+Layout Structure
+┌─────────────────────────────────────────────────────────────┐
+│                    FULL SCREEN CONTAINER                     │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              ANIMATED BACKGROUND LAYERS                  │ │
+│  │    ○ Grid Pattern (opacity-20)                          │ │
+│  │    ○ Purple Gradient Blob (top-left)                    │ │
+│  │    ○ Pink Gradient Blob (bottom-right)                  │ │
+│  │    ○ Cyan Gradient Blob (center)                        │ │
+│  │    ○ Floating Particles (4 dots)                        │ │
+│  │  ┌─────────────────────────────────────────────────────┐│ │
+│  │  │                    LOGO                              ││ │
+│  │  │     [⚡ Icon] LUMIN                                  ││ │
+│  │  │     "Continue your journey"                          ││ │
+│  │  ├─────────────────────────────────────────────────────┤│ │
+│  │  │                AUTH CARD (glass-card)                ││ │
+│  │  │  ┌────────────────┬────────────────┐                ││ │
+│  │  │  │     Login      │    Sign Up     │  (Mode Tabs)   ││ │
+│  │  │  └────────────────┴────────────────┘                ││ │
+│  │  │                                                      ││ │
+│  │  │  [👤] Display Name (signup only)                     ││ │
+│  │  │  [📧] Email                                          ││ │
+│  │  │  [🔒] Password [👁]                                   ││ │
+│  │  │  [🔑] Confirm Password (signup only)                 ││ │
+│  │  │                                                      ││ │
+│  │  │  [════════ Enter the Arena ════════]                 ││ │
+│  │  │                                                      ││ │
+│  │  │  ─────────────────────────────────                   ││ │
+│  │  │  ✨ Gamify your growth. Level up ✨                  ││ │
+│  │  └─────────────────────────────────────────────────────┘│ │
+│  │  ┌─────────────────────────────────────────────────────┐│ │
+│  │  │     +100 XP for joining today! (signup badge)       ││ │
+│  │  └─────────────────────────────────────────────────────┘│ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+Exact Specifications
+Background Elements
+Element	Class/Style	Value
+Container	min-h-screen bg-background relative overflow-hidden flex items-center justify-center	Full viewport
+Grid Pattern	absolute inset-0 grid-pattern opacity-20	50px × 50px grid
+Purple Blob	w-[500px] h-[500px] bg-neon-purple/20 rounded-full blur-[120px] animate-pulse	Top-left
+Pink Blob	w-[500px] h-[500px] bg-neon-pink/20 rounded-full blur-[120px] animate-pulse	Bottom-right, 1s delay
+Cyan Blob	w-[600px] h-[600px] bg-neon-cyan/10 rounded-full blur-[150px]	Center
+Floating Particles	w-2 h-2 to w-4 h-4, rounded-full animate-float	Various delays
+Logo Section
+Element	Class	Value
+Container	text-center mb-8	32px margin-bottom
+Icon Container	p-3 rounded-2xl bg-gradient-to-br from-neon-purple to-neon-pink animate-pulse neon-glow-purple	12px padding
+Icon	w-8 h-8 text-foreground	Zap icon, 32px
+Title	text-4xl font-display font-bold gradient-text	Orbitron, 36px
+Subtitle	text-muted-foreground font-body text-lg	Inter, 18px
+Auth Card
+Property	Value
+Class	glass-card p-8 rounded-2xl animated-border
+Padding	32px
+Border Radius	16px (1rem)
+Background	linear-gradient(145deg, hsl(222 47% 10%) 0%, hsl(222 47% 7%) 100%)
+Backdrop Filter	blur(12px)
+Animated Border	4s linear infinite gradient flow
+Mode Tabs
+Element	Active State	Inactive State
+Container	flex gap-2 mb-8 p-1 bg-surface-2 rounded-xl	-
+Button	variant="gaming"	variant="ghost" text-muted-foreground
+Size	flex-1	Same
+Input Fields
+Property	Value
+Height	h-12 (48px)
+Background	bg-surface-2
+Border	border-surface-3
+Focus Border (Email)	focus:border-neon-purple focus:ring-neon-purple/20
+Focus Border (Password)	focus:border-neon-pink focus:ring-neon-pink/20
+Focus Border (Confirm)	focus:border-neon-green focus:ring-neon-green/20
+Focus Border (Name)	focus:border-neon-cyan focus:ring-neon-cyan/20
+Transition	transition-all
+Labels
+Property	Value
+Class	text-foreground flex items-center gap-2 text-sm font-medium
+Icon Size	w-4 h-4
+Icon Colors	Purple (email), Pink (password), Cyan (name), Green (confirm)
+Error Messages
+Property	Value
+Class	text-sm text-neon-orange flex items-center gap-1
+Indicator	w-1 h-1 rounded-full bg-neon-orange
+Submit Button
+Property	Value
+Class	w-full btn-gaming group h-12 text-base
+Height	48px
+Loading Spinner	w-5 h-5 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin
+XP Signup Badge
+Property	Value
+Class	inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2/80 border border-neon-green/30 backdrop-blur-sm
+XP Text	text-neon-green text-sm font-bold
+📄 PAGE 2: Dashboard (/dashboard)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN CONTAINER (pt-20 pb-12 px-4, max-w-7xl mx-auto)                   │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  WELCOME HEADER                                                      ││
+│  │  "Welcome back, [Name]!" + Streak Message                           ││
+│  │  [Create Goal] [Journal]                                             ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────┬───────────────────────────┐│
+│  │           LEFT COLUMN (lg:col-span-2)    │    RIGHT COLUMN          ││
+│  │  ┌─────────────────────────────────────┐ │ ┌─────────────────────┐  ││
+│  │  │     LEVEL PROGRESS (glass-card)     │ │ │   STREAK DISPLAY    │  ││
+│  │  │     XP Progress Bar                  │ │ │   + Week Calendar   │  ││
+│  │  └─────────────────────────────────────┘ │ └─────────────────────┘  ││
+│  │  ┌────┬────┬────┬────┐                   │ ┌─────────────────────┐  ││
+│  │  │Str │Ent │Foc │Tim │ STATS GRID       │ │   MOOD PICKER       │  ││
+│  │  └────┴────┴────┴────┘                   │ │   + Quick Entry     │  ││
+│  │  ┌─────────────────────────────────────┐ │ └─────────────────────┘  ││
+│  │  │      WEEKLY ACTIVITY CHART          │ │ ┌─────────────────────┐  ││
+│  │  │      Bar Chart (7 days)              │ │ │   AI COACH          │  ││
+│  │  └─────────────────────────────────────┘ │ │   (animated-border)  │  ││
+│  │  ┌─────────────────────────────────────┐ │ └─────────────────────┘  ││
+│  │  │        ACTIVE GOALS                  │ │ ┌─────────────────────┐  ││
+│  │  │        Goal Cards (3 max)            │ │ │   BADGES            │  ││
+│  │  └─────────────────────────────────────┘ │ │   (3 columns)        │  ││
+│  │  ┌─────────────────────────────────────┐ │ └─────────────────────┘  ││
+│  │  │        RECENT JOURNAL               │ │                          ││
+│  │  │        Entry Cards (2 max)          │ │                          ││
+│  │  └─────────────────────────────────────┘ │                          ││
+│  └─────────────────────────────────────────┴───────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Main Container
+Property	Value
+Class	pt-20 pb-12 px-4
+Inner	max-w-7xl mx-auto
+Padding Top	80px (navbar offset)
+Padding Bottom	48px
+Max Width	1280px
+Welcome Header
+Element	Class
+Container	mb-8 animate-fade-in
+Flex Container	flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6
+Title	font-display font-bold text-3xl md:text-4xl mb-2
+Gradient Name	gradient-text
+Subtitle	text-muted-foreground
+Main Grid
+Property	Value
+Class	grid lg:grid-cols-3 gap-6
+Gap	24px
+Breakpoint	1024px (lg)
+Glass Cards
+Property	Value
+Class	glass-card p-6
+Padding	24px
+Animation	animate-fade-in-up with staggered delays
+Animation Delays	0s, 0.1s, 0.2s, 0.3s, 0.4s
+Stats Grid
+Property	Value
+Class	grid grid-cols-2 md:grid-cols-4 gap-4
+Gap	16px
+Breakpoint	768px (md)
+StatCard Component
+Property	Value
+Class	glass-card p-5 stat-card
+Padding	20px
+Icon Container	p-2.5 rounded-xl (10px padding)
+Icon Size	w-5 h-5
+Value	text-2xl font-display font-bold
+Title	text-sm text-muted-foreground mb-1
+Subtitle	text-xs text-muted-foreground mt-1
+Hover Effect	transform: translateY(-4px) + glow
+Stat Card Variants (Icon Background Colors)
+Variant	Icon BG	Icon Color
+purple	bg-primary/20	text-neon-purple
+pink	bg-accent/20	text-neon-pink
+cyan	bg-neon-cyan/20	text-neon-cyan
+green	bg-neon-green/20	text-neon-green
+orange	bg-neon-orange/20	text-neon-orange
+Goal Card (Dashboard)
+Property	Value
+Container	flex items-center gap-4 p-4 rounded-xl bg-surface-2 border border-border/50
+Hover	hover:border-primary/30 transition-colors
+Priority Icon Container	p-2 rounded-lg
+Progress Bar	h-1.5 flex-1 max-w-20
+Weekly Activity Chart
+Property	Value
+Container Height	h-40 (160px)
+Bar Container	flex items-end justify-between gap-2
+Bar	w-full max-w-8 rounded-t bg-gradient-primary
+Day Label	text-xs text-muted-foreground
+📄 PAGE 3: Goals (/goals)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN CONTAINER (container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-12)   │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  HEADER                                                              ││
+│  │  🎯 My Goals                     [Templates] [+ Create Goal]        ││
+│  │  "Track your daily goals..."                                         ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  CATEGORY FILTER (horizontal scroll)                                 ││
+│  │  [All] [Health] [Work] [Learning] [Personal] [Finance] [Fitness]   ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌──────────────────────────────────────────────┬──────────────────────┐│
+│  │           GOALS COLUMN                        │    SIDEBAR          ││
+│  │  ┌──────────────────────────────────────────┐│ ┌─────────────────┐ ││
+│  │  │          ACTIVE GOALS                     ││ │ Goal Insights   │ ││
+│  │  │          Goal Cards (grid)                ││ │ (AI Panel)      │ ││
+│  │  └──────────────────────────────────────────┘│ ├─────────────────┤ ││
+│  │  ┌──────────────────────────────────────────┐│ │ Goal Analytics  │ ││
+│  │  │          PAUSED GOALS                     ││ │ (Stats Panel)   │ ││
+│  │  └──────────────────────────────────────────┘│ ├─────────────────┤ ││
+│  │  ┌──────────────────────────────────────────┐│ │ Notifications   │ ││
+│  │  │          COMPLETED GOALS                  ││ │ (Settings)      │ ││
+│  │  └──────────────────────────────────────────┘│ └─────────────────┘ ││
+│  └──────────────────────────────────────────────┴──────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Category Filter
+Property	Value
+Container	mb-6 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0
+Inner	flex gap-2 min-w-max
+Button	shrink-0 gap-1
+Active	variant="default"
+Inactive	variant="outline"
+Category Colors
+Category	Color Class
+General	bg-muted text-muted-foreground
+Health	bg-pink-500/20 text-pink-400
+Work	bg-blue-500/20 text-blue-400
+Learning	bg-purple-500/20 text-purple-400
+Personal	bg-green-500/20 text-green-400
+Finance	bg-yellow-500/20 text-yellow-400
+Fitness	bg-orange-500/20 text-orange-400
+Goal Card
+Property	Value
+Class	glass-card group hover:border-primary/50 transition-all duration-300
+Content Padding	p-3 sm:p-4
+Title	font-semibold text-foreground mb-1 truncate
+Description	text-sm text-muted-foreground mb-3 line-clamp-2
+Progress Bar	h-2
+Progress Buttons	text-xs h-7 px-2 flex-1 min-w-[40px]
+Action Buttons	h-8 w-8
+Priority Badge Colors
+Priority	Class
+High	bg-destructive/20 text-destructive border-destructive/50
+Medium	bg-warning/20 text-warning border-warning/50
+Low	bg-primary/20 text-primary border-primary/50
+Create Goal Dialog
+Property	Value
+Container	glass-card max-w-md mx-auto max-h-[90vh] overflow-y-auto
+Input	pointer-events-auto (critical for z-index fix)
+Select Content	pointer-events-auto z-[100]
+📄 PAGE 4: Journal (/journal)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN (pt-20 pb-12 px-4, max-w-7xl)                                      │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │  HEADER                                                              ││
+│  │  📖 Journal                              [+ New Entry]              ││
+│  │  "Capture your thoughts, track your growth"                          ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌────────────────────┬────────────────────────────────────────────────┐│
+│  │   ENTRY LIST       │              DETAIL VIEW                        ││
+│  │   (lg:col-span-1)  │              (lg:col-span-2)                   ││
+│  │ ┌────────────────┐ │ ┌────────────────────────────────────────────┐ ││
+│  │ │ 🔍 Search      │ │ │              ENTRY DETAIL                   │ ││
+│  │ └────────────────┘ │ │   😊 Entry Title                            │ ││
+│  │ ┌────────────────┐ │ │   📅 Date     +25 XP                        │ ││
+│  │ │ Entry Card 1   │ │ │                                             │ ││
+│  │ │ 😊 Title       │ │ │   Content text...                          │ ││
+│  │ │ 📅 Date +XP    │ │ │                                             │ ││
+│  │ │ #tags          │ │ │   #tag1 #tag2 #tag3                        │ ││
+│  │ ├────────────────┤ │ │                                             │ ││
+│  │ │ Entry Card 2   │ │ │   ┌─────────────────────────────────────┐   │ ││
+│  │ ├────────────────┤ │ │   │ ✨ AI Insight                       │   │ ││
+│  │ │ Entry Card 3   │ │ │   │ "Great entry! Keep it up!"          │   │ ││
+│  │ └────────────────┘ │ │   └─────────────────────────────────────┘   │ ││
+│  │                    │ └────────────────────────────────────────────┘ ││
+│  └────────────────────┴────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Grid Layout
+Property	Value
+Container	grid lg:grid-cols-3 gap-6
+Entry List	lg:col-span-1 space-y-4
+Detail View	lg:col-span-2
+Search Input
+Property	Value
+Container	relative
+Icon	absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground
+Input	pl-10 bg-surface-2 border-surface-3 h-12
+Entry Card
+Property	Value
+Container	glass-card p-4 rounded-xl cursor-pointer transition-all hover:scale-[1.02]
+Selected	ring-2 ring-primary
+Mood Emoji	text-2xl
+Title	font-medium truncate
+Date	text-xs text-muted-foreground
+XP	text-xs text-neon-green
+Tag	text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary
+Entry List Scroll
+Property	Value
+Class	space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2
+Create Form
+Property	Value
+Container	glass-card p-6 rounded-2xl animate-fade-in-up
+Mood Button (inactive)	p-3 rounded-xl bg-surface-2 hover:bg-surface-3
+Mood Button (active)	bg-primary/20 ring-2 ring-primary scale-110
+Emoji Size	text-2xl
+Textarea	bg-surface-2 border-surface-3 min-h-[200px] resize-none
+AI Insight Box
+Property	Value
+Class	p-4 rounded-xl bg-gradient-to-r from-neon-purple/10 to-neon-pink/10 border border-neon-purple/20
+Header Icon	w-4 h-4 text-neon-purple
+Header Text	text-sm font-medium text-neon-purple
+Content	text-sm text-muted-foreground
+📄 PAGE 5: Focus Timer (/focus)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN (pt-20 pb-12 px-4, max-w-4xl mx-auto)                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                         HEADER (centered)                            ││
+│  │                    ⏱️ Focus Timer                                   ││
+│  │                "Stay focused, earn XP, level up"                     ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                    MODE SELECTOR (centered)                          ││
+│  │            [🎯 Focus] [☕ Short Break] [☕ Long Break]              ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                      TIMER CIRCLE (centered)                         ││
+│  │              ╭────────────────────────────────╮                     ││
+│  │             │          ┌──────────┐           │                     ││
+│  │             │          │  25:00   │           │                     ││
+│  │             │          │Focus Time│           │                     ││
+│  │             │          └──────────┘           │                     ││
+│  │              ╰────────────────────────────────╯                     ││
+│  │                    (SVG progress ring)                               ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                       CONTROLS (centered)                            ││
+│  │                    [↺]  [▶ PLAY]  [🔊]                              ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                   SESSION PROGRESS (centered)                        ││
+│  │                    ● ● ○ ○  2/4 until long break                    ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌────────────┬────────────┬────────────┬────────────┐                 │
+│  │ Sessions   │  Minutes   │   Streak   │   Total    │  STATS GRID    │
+│  │  Today     │   Today    │            │  Sessions  │                │
+│  └────────────┴────────────┴────────────┴────────────┘                 │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                        PRO TIPS (glass-card)                         ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Timer Circle
+Property	Value
+Outer Glow	absolute inset-0 rounded-full bg-gradient-to-r opacity-20 blur-2xl scale-110
+Container	glass-card w-72 h-72 md:w-80 md:h-80 rounded-full
+Size	288px × 288px, 320px × 320px on md
+SVG ViewBox	0 0 100 100
+Circle Radius	45
+Stroke Width	4
+Background Circle	stroke="hsl(var(--surface-3))"
+Progress Circle	Dynamic stroke color based on mode
+Stroke Dasharray	${progress * 2.83} 283
+Timer Display
+Property	Value
+Time	font-display font-bold text-6xl md:text-7xl tracking-wider
+Running Glow	text-glow-purple
+Mode Label	text-muted-foreground text-sm mt-2 uppercase tracking-widest
+Control Buttons
+Property	Value
+Reset/Sound	variant="ghost" size="lg" w-14 h-14 rounded-full
+Play/Pause	variant="gaming" size="lg" w-20 h-20 rounded-full text-lg
+Play Icon	w-8 h-8 ml-1
+Pause Icon	w-8 h-8
+Session Indicators
+Property	Value
+Container	flex justify-center gap-2 mb-8
+Dot (active)	w-4 h-4 rounded-full bg-gradient-primary scale-110
+Dot (inactive)	w-4 h-4 rounded-full bg-surface-3
+Text	text-sm text-muted-foreground ml-2
+Stats Grid (Focus)
+Property	Value
+Grid	grid grid-cols-2 md:grid-cols-4 gap-4
+Card	glass-card p-4 rounded-xl text-center
+Icon	w-6 h-6 mx-auto mb-2
+Value	font-display font-bold text-2xl
+Label	text-xs text-muted-foreground
+📄 PAGE 6: Achievements (/achievements)
+Layout Structure
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              NAVBAR (fixed)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  MAIN (pt-20 pb-12 px-4, max-w-6xl mx-auto)                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                      HEADER (centered)                               ││
+│  │                   🏆 Achievements                                    ││
+│  │           "Your collection of glory and accomplishments"            ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌──────────────────┬──────────────────┬──────────────────┐            │
+│  │    🏅 Earned     │    🔒 Locked     │    ✨ XP Earned   │  STATS    │
+│  │       12         │        8         │      2,500       │            │
+│  └──────────────────┴──────────────────┴──────────────────┘            │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                    CATEGORY FILTER (centered)                        ││
+│  │      [All] [🔥 Streaks] [📖 Journal] [⏱️ Focus] [🎯 Level]         ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+│  ┌─────────────┬─────────────┬─────────────┐                           │
+│  │Achievement 1│Achievement 2│Achievement 3│                           │
+│  │ [Icon/Lock] │ [Icon/Lock] │ [Icon/Lock] │                           │
+│  │ Name [rare] │ Name [epic] │ Name [leg.] │                           │
+│  │ Description │ Description │ Description │                           │
+│  │ Progress/XP │ Progress/XP │ Progress/XP │                           │
+│  └─────────────┴─────────────┴─────────────┘                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                   MOTIVATIONAL SECTION (centered)                    ││
+│  │                       👑 Keep Pushing!                               ││
+│  │                  "You've unlocked 12 of 20..."                       ││
+│  │                     📈 60% Complete                                  ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+Exact Specifications
+Stats Row
+Property	Value
+Grid	grid grid-cols-3 gap-4 mb-8
+Card	glass-card p-4 md:p-6 rounded-xl text-center
+Icon	w-6 h-6 md:w-8 md:h-8 mx-auto mb-2
+Value	font-display font-bold text-2xl md:text-3xl
+Label	text-xs md:text-sm text-muted-foreground
+Achievement Card
+Property	Value
+Container	glass-card p-5 rounded-xl border transition-all duration-300
+Earned State	Rarity glow + border
+Locked State	opacity-60
+Icon Container	w-14 h-14 rounded-xl flex items-center justify-center text-3xl
+Rarity Badge	text-xs px-2 py-0.5 rounded-full capitalize bg-gradient-to-r text-white
+Progress Bar	h-2 bg-surface-3 rounded-full overflow-hidden
+Rarity Gradient Colors
+Rarity	Gradient
+Common	from-gray-400 to-gray-500
+Rare	from-blue-400 to-blue-600
+Epic	from-purple-400 to-purple-600
+Legendary	from-yellow-400 to-orange-500
+Rarity Glow Effects
+Rarity	Hover Shadow
+Common	None
+Rare	0 0 20px rgba(59,130,246,0.3)
+Epic	0 0 20px rgba(168,85,247,0.3)
+Legendary	0 0 20px rgba(234,179,8,0.3)
+Motivational Section
+Property	Value
+Container	glass-card p-8 rounded-2xl text-center animated-border
+Icon	w-12 h-12 text-neon-yellow mx-auto mb-4
+Title	font-display font-bold text-2xl mb-2 gradient-text
+Text	text-muted-foreground max-w-md mx-auto mb-6
+Progress	text-neon-green font-medium
+📄 PAGE 7: Profile (/profile)
+Exact Specifications
+Avatar
+Property	Value
+Container	w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-primary
+Initial	text-4xl md:text-5xl font-display font-bold text-primary-foreground
+Level Badge	absolute -bottom-2 -right-2 bg-neon-yellow text-black text-sm font-bold px-3 py-1 rounded-full
+Profile Header
+Property	Value
+Container	glass-card p-8 rounded-2xl mb-8
+Flex	flex flex-col md:flex-row items-start md:items-center gap-6
+Name	font-display font-bold text-3xl md:text-4xl gradient-text
+Bio	text-muted-foreground mb-4
+Meta Info	text-sm text-muted-foreground flex items-center gap-1
+Edit Form
+Property	Value
+Name Input	bg-surface-2 border-surface-3 text-xl font-display font-bold
+Bio Textarea	bg-surface-2 border-surface-3 resize-none rows-2
+Account Info Section
+Property	Value
+Container	glass-card p-6 rounded-2xl
+Row	flex items-center justify-between py-3 border-b border-surface-3
+Label	text-muted-foreground
+Value	font-medium
+Quick Actions
+Property	Value
+Grid	grid md:grid-cols-3 gap-4 mt-8
+Button	variant="outline" h-auto py-6 flex flex-col gap-2
+Icon	w-6 h-6
+📄 PAGE 8: Habits (/habits)
+Exact Specifications
+Today's Progress Card
+Property	Value
+Container	glass-card mb-6
+Content Padding	p-4 sm:p-6
+Progress Bar	h-3
+Badge	variant="outline" bg-primary/20 text-primary
+Habit Card
+Property	Value
+Container	glass-card transition-all duration-300
+Completed State	border-green-500/50 bg-green-500/5
+Content Padding	p-4
+Icon	text-3xl
+Title	font-semibold
+Description	text-xs text-muted-foreground line-clamp-1
+Streak Badge	variant="outline" bg-warning/20 text-warning text-xs
+Check-in Button (active)	variant="gaming"
+Check-in Button (done)	variant="outline" with CheckCircle2 text-green-500
+📄 PAGE 9: Vision Board (/vision)
+Exact Specifications
+Vision Card
+Property	Value
+Container	glass-card group hover:border-primary/50 transition-all duration-300
+Content Padding	p-4
+Category Icon	text-2xl
+Title	font-semibold text-lg mb-2
+Description	text-sm text-muted-foreground line-clamp-3 mb-3
+Target Date	text-xs text-muted-foreground flex items-center gap-1
+Achieved Vision Card
+Property	Value
+Container	glass-card border-green-500/30 bg-green-500/5
+Badge	variant="outline" bg-green-500/20 text-green-400 text-xs
+Title	font-semibold text-lg mb-2 line-through opacity-70
+📄 PAGE 10: Social (/social)
+Exact Specifications
+Tabs
+Property	Value
+Container	space-y-6
+TabsList	grid w-full grid-cols-3 max-w-md
+TabsTrigger	gap-2
+Icon	w-4 h-4
+Label	hidden sm:inline
+Content Container	max-w-2xl
+🎨 GLOBAL DESIGN SYSTEM
+1. Color Palette (Exact HSL Values)
+Base Colors
+Token	HSL Value	HEX Equivalent	Usage
+--background	222 47% 6%	#0a0d14	Page background
+--foreground	210 40% 98%	#f8fafc	Primary text
+--card	222 47% 8%	#0f1318	Card backgrounds
+--card-foreground	210 40% 98%	#f8fafc	Card text
+--primary	262 83% 58%	#8b5cf6	Primary actions
+--primary-foreground	210 40% 98%	#f8fafc	Text on primary
+--secondary	222 47% 14%	#1a202c	Secondary elements
+--muted	222 47% 12%	#151a23	Muted backgrounds
+--muted-foreground	215 20% 55%	#7c8594	Muted text
+--accent	330 81% 60%	#ec4899	Accent/Pink
+--destructive	0 84% 60%	#ef4444	Errors/Delete
+--border	222 47% 16%	#1e2633	Borders
+--input	222 47% 14%	#1a202c	Input backgrounds
+--ring	262 83% 58%	#8b5cf6	Focus rings
+Neon Colors
+Token	HSL Value	HEX Equivalent	Usage
+--neon-purple	262 83% 58%	#8b5cf6	Primary neon
+--neon-pink	330 81% 60%	#ec4899	Accent neon
+--neon-cyan	186 100% 50%	#00d4ff	Cyan accent
+--neon-green	142 76% 50%	#22c55e	Success/XP
+--neon-orange	25 95% 53%	#f97316	Streak/Fire
+--neon-yellow	45 100% 51%	#fbbf24	Level/XP
+Surface Colors
+Token	HSL Value	Usage
+--surface-1	222 47% 8%	Darkest surface
+--surface-2	222 47% 11%	Medium surface
+--surface-3	222 47% 14%	Lightest surface
+2. Typography
+Font Families
+Purpose	Font	Fallback	CSS Variable
+Display	Orbitron	sans-serif	--font-display
+Body	Inter	sans-serif	--font-body
+Google Fonts Import
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+Font Sizes (Tailwind Classes)
+Element	Mobile	Desktop	Class
+Page Title	24px	36px	text-2xl sm:text-3xl md:text-4xl
+Section Title	18px	20px	text-lg
+Card Title	16px	18px	font-semibold
+Body Text	14px	16px	text-sm md:text-base
+Small Text	12px	14px	text-xs md:text-sm
+Tiny Text	10px	12px	text-[10px] md:text-xs
+Font Weights
+Weight	Value	Usage
+Light	300	Subtle text
+Regular	400	Body text
+Medium	500	Labels
+Semibold	600	Section headers
+Bold	700	Titles
+Extra Bold	800-900	Display text
+Text Utility Classes
+
+.font-display { font-family: var(--font-display); }
+.font-body { font-family: var(--font-body); }
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: var(--gradient-primary);
+}
+3. Gradients
+Gradient Definitions
+Name	CSS Value
+--gradient-primary	linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(330 81% 60%) 100%)
+--gradient-secondary	linear-gradient(135deg, hsl(186 100% 50%) 0%, hsl(262 83% 58%) 100%)
+--gradient-success	linear-gradient(135deg, hsl(142 76% 50%) 0%, hsl(186 100% 50%) 100%)
+--gradient-fire	linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(45 100% 51%) 100%)
+--gradient-dark	linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 4%) 100%)
+--gradient-card	linear-gradient(145deg, hsl(222 47% 10%) 0%, hsl(222 47% 7%) 100%)
+--gradient-glow	radial-gradient(ellipse at center, hsl(262 83% 58% / 0.15) 0%, transparent 70%)
+Tailwind Utility Classes
+
+.bg-gradient-primary { background: var(--gradient-primary); }
+.bg-gradient-secondary { background: var(--gradient-secondary); }
+.bg-gradient-success { background: var(--gradient-success); }
+.bg-gradient-fire { background: var(--gradient-fire); }
+4. Shadows
+Shadow Definitions
+Name	CSS Value
+--shadow-sm	0 2px 8px hsl(222 47% 4% / 0.5)
+--shadow-md	0 4px 16px hsl(222 47% 4% / 0.6)
+--shadow-lg	0 8px 32px hsl(222 47% 4% / 0.7)
+--shadow-glow-purple	0 0 20px hsl(262 83% 58% / 0.4), 0 0 40px hsl(262 83% 58% / 0.2)
+--shadow-glow-pink	0 0 20px hsl(330 81% 60% / 0.4), 0 0 40px hsl(330 81% 60% / 0.2)
+--shadow-glow-cyan	0 0 20px hsl(186 100% 50% / 0.4), 0 0 40px hsl(186 100% 50% / 0.2)
+5. Border Radius
+Token	Value
+--radius	0.75rem (12px)
+rounded-lg	12px
+rounded-md	10px
+rounded-sm	8px
+rounded-xl	12px
+rounded-2xl	16px
+rounded-full	9999px
+6. Spacing System (8px Base)
+Class	Value	Pixels
+p-1	0.25rem	4px
+p-2	0.5rem	8px
+p-3	0.75rem	12px
+p-4	1rem	16px
+p-5	1.25rem	20px
+p-6	1.5rem	24px
+p-8	2rem	32px
+p-12	3rem	48px
+gap-1	0.25rem	4px
+gap-2	0.5rem	8px
+gap-3	0.75rem	12px
+gap-4	1rem	16px
+gap-6	1.5rem	24px
+mb-2	0.5rem	8px
+mb-4	1rem	16px
+mb-6	1.5rem	24px
+mb-8	2rem	32px
+7. Breakpoints
+Breakpoint	Value	Usage
+sm	640px	Mobile landscape
+md	768px	Tablet
+lg	1024px	Desktop
+xl	1280px	Large desktop
+2xl	1400px	Container max
+8. Navbar Specifications
+Property	Value
+Position	fixed top-0 left-0 right-0 z-50
+Border	border-b border-border/50
+Background	bg-background/80 backdrop-blur-xl
+Height	h-16 (64px)
+Container	container mx-auto px-4
+Logo Icon	w-8 h-8
+Logo Text	font-display font-bold text-xl tracking-wider
+Nav Links (Desktop)	flex items-center gap-1
+Nav Link	px-4 py-2 rounded-lg text-sm font-medium
+Nav Link Active	bg-primary/20 text-primary
+Nav Link Inactive	text-muted-foreground hover:text-foreground hover:bg-muted
+Streak Badge	px-3 py-1.5 rounded-lg bg-surface-2
+XP Bar Width	w-32
+Level Badge	level-badge w-8 h-8 rounded-full
+Mobile Menu Button	md:hidden p-2
+9. Button Specifications
+Button Variants (from button.tsx)
+Variant	Styles
+default	bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:-translate-y-0.5
+destructive	bg-destructive text-destructive-foreground shadow-md hover:bg-destructive/90
+outline	border-2 border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary
+secondary	bg-secondary text-secondary-foreground hover:bg-secondary/80
+ghost	text-foreground hover:bg-muted
+link	text-primary underline-offset-4 hover:underline
+gaming	font-display tracking-wider uppercase bg-gradient-to-r from-primary to-accent hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] hover:-translate-y-1
+neon	bg-transparent border-2 border-primary text-primary font-display tracking-wider uppercase
+success	bg-gradient-to-r from-[hsl(var(--neon-green))] to-[hsl(var(--neon-cyan))]
+fire	bg-gradient-to-r from-[hsl(var(--neon-orange))] to-[hsl(var(--neon-yellow))]
+Button Sizes
+Size	Height	Padding	Border Radius
+default	h-11 (44px)	px-5 py-2	rounded-lg
+sm	h-9 (36px)	px-4	rounded-md
+lg	h-12 (48px)	px-8	rounded-xl
+xl	h-14 (56px)	px-10	rounded-xl
+icon	h-10 w-10	-	-
+10. Input Specifications
+Property	Value
+Height	h-10 (40px) default, h-12 (48px) for auth
+Width	w-full
+Border Radius	rounded-md
+Border	border border-input
+Background	bg-background or bg-surface-2
+Padding	px-3 py-2
+Font Size	text-base md:text-sm
+Placeholder	placeholder:text-muted-foreground
+Focus	focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+Disabled	disabled:cursor-not-allowed disabled:opacity-50
+11. Card (Glass-Card) Specifications
+Glass Card Base
+
+.glass-card {
+  @apply relative overflow-hidden rounded-xl border border-border/50;
+  background: linear-gradient(145deg, hsl(var(--surface-2)) 0%, hsl(var(--surface-1)) 100%);
+  backdrop-filter: blur(12px);
+}
+
+.glass-card::before {
+  content: '';
+  @apply absolute inset-0 opacity-50 pointer-events-none;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.05) 0%, transparent 50%);
+}
+Card Padding by Context
+Context	Padding
+Stat Card	p-5 (20px)
+Section Card	p-6 (24px)
+Profile Header	p-8 (32px)
+Empty State	p-8 or p-12
+12. Animations
+Keyframe Animations
+
+/* Fade In */
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade In Up */
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Float */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Pulse Glow */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.3); }
+}
+
+/* Glow Pulse */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.4); }
+  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6), 0 0 60px hsl(var(--primary) / 0.3); }
+}
+
+/* Fire Pulse (Streak) */
+@keyframes fire-pulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 8px hsl(var(--neon-orange) / 0.8));
+    transform: scale(1);
+  }
+  50% { 
+    filter: drop-shadow(0 0 16px hsl(var(--neon-orange) / 1));
+    transform: scale(1.05);
+  }
+}
+
+/* Border Flow (Animated Border) */
+@keyframes border-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* Shimmer */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Achievement Pop */
+@keyframes achievement-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+Animation Classes
+Class	Duration	Timing
+animate-fade-in	0.5s	ease-out
+animate-fade-in-up	0.6s	ease-out
+animate-scale-in	0.3s	ease-out
+animate-slide-in-right	0.4s	ease-out
+animate-glow-pulse	2s	ease-in-out infinite
+animate-float	3s	ease-in-out infinite
+animate-spin-slow	8s	linear infinite
+animate-bounce-subtle	2s	ease-in-out infinite
+animate-shimmer	2s	linear infinite
+13. Icons (Lucide React)
+Icon Library
+Library: lucide-react
+Default Size: w-4 h-4 (16px) for inline, w-5 h-5 (20px) for buttons
+Large Icons: w-6 h-6 (24px), w-8 h-8 (32px), w-12 h-12 (48px)
+Stroke Width: Default (2)
+Common Icons Used
+Icon Name	Usage
+Zap	Logo, XP, Energy
+Flame	Streak, Fire
+Target	Goals
+Timer	Focus
+BookOpen	Journal
+Trophy	Achievements
+Sparkles	AI, Special
+User	Profile
+Users	Social
+Plus	Create actions
+Edit3	Edit
+Trash2	Delete
+CheckCircle2	Complete
+Calendar	Dates
+ChevronRight	Navigation
+Menu / X	Mobile menu
+Eye / EyeOff	Password toggle
+Loader2	Loading spinner
+14. Special Components
+XP Progress Bar
+
+.xp-bar {
+  @apply relative h-3 rounded-full overflow-hidden;
+  background: hsl(var(--surface-3));
+}
+
+.xp-bar-fill {
+  @apply h-full rounded-full transition-all duration-700 ease-out;
+  background: var(--gradient-primary);
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.6);
+}
+Level Badge
+
+.level-badge {
+  @apply relative inline-flex items-center justify-center;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-glow-purple);
+}
+
+.level-badge::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(135deg, white 0%, transparent 50%);
+  opacity: 0.2;
+}
+Streak Fire
+
+.streak-fire {
+  @apply relative;
+  animation: fire-pulse 1.5s ease-in-out infinite;
+}
+Animated Border
+
+.animated-border {
+  @apply relative;
+}
+
+.animated-border::before {
+  content: '';
+  @apply absolute -inset-[1px] rounded-xl;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--neon-cyan)), hsl(var(--primary)));
+  background-size: 300% 100%;
+  animation: border-flow 4s linear infinite;
+  z-index: -1;
+}
+Grid Pattern Background
+
+.grid-pattern {
+  background-image: 
+    linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+15. Responsive Patterns
+Container Pattern
+
+.container {
+  @apply mx-auto px-4;
+  max-width: 1400px;
+}
+Main Content Pattern
+
+main {
+  @apply pt-20 pb-12 px-4; /* Desktop */
+  @apply sm:pt-24; /* Mobile adjustment */
+}
+Grid Patterns
+Pattern	Mobile	Tablet	Desktop
+Stats	grid-cols-2	md:grid-cols-4	-
+Cards	grid-cols-1	sm:grid-cols-2	lg:grid-cols-3
+Main Layout	grid-cols-1	-	lg:grid-cols-3
+Mobile Menu
+Property	Value
+Display	md:hidden
+Background	bg-background/95 backdrop-blur-xl
+Border	border-t border-border/50
+Padding	py-4 space-y-2
+16. Z-Index Scale
+Layer	Value
+Background elements	-1
+Default content	0
+Floating particles	auto
+Cards	10
+Dropdowns/Selects	50
+Navbar	50
+Modals/Dialogs	50 (default)
+Select Content Override	100
+Toast notifications	100
+17. Complete Tailwind Mapping Summary
+Essential Utility Classes
+
+/* Layout */
+.min-h-screen, .flex, .grid, .items-center, .justify-center, .justify-between
+.flex-col, .flex-1, .gap-2, .gap-4, .gap-6
+.container, .mx-auto, .px-4, .py-2
+
+/* Sizing */
+.w-full, .h-12, .w-8, .h-8, .max-w-md, .max-w-7xl
+
+/* Colors */
+.bg-background, .text-foreground, .text-muted-foreground
+.bg-surface-2, .bg-surface-3, .border-border/50
+
+/* Typography */
+.font-display, .font-body, .font-bold, .font-semibold
+.text-sm, .text-lg, .text-2xl, .text-4xl, .tracking-wider, .uppercase
+
+/* Effects */
+.rounded-xl, .rounded-2xl, .rounded-full
+.shadow-lg, .backdrop-blur-xl, .blur-[120px]
+.transition-all, .duration-300
+
+/* States */
+.hover:scale-[1.02], .hover:-translate-y-0.5, .hover:border-primary/30
+.focus:ring-2, .focus:ring-primary, .disabled:opacity-50
+
+/* Animations */
+.animate-fade-in, .animate-fade-in-up, .animate-pulse, .animate-float, .animate-spin
+
+/* Responsive */
+.sm:text-3xl, .md:grid-cols-4, .lg:col-span-2, .hidden, .md:flex
+This document provides everything needed to recreate the LUMIN UI pixel-perfect. Each specification includes exact values that can be directly used in Tailwind CSS or custom CSS.
+
+
+
+
+Visual edits
+
+Chat
