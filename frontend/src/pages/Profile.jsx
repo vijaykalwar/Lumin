@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { profileAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import {User,Mail,MapPin,Briefcase,Calendar,Edit2,
-  Save, X,Lock, Settings,Trophy,TrendingUp,Target,Clock,Award, Loader2
-} from 'lucide-react';
+  Save, X,Lock, Settings,Trophy,TrendingUp,Target,Clock,Award, Loader2} from 'lucide-react';
 import { showToast } from '../utils/toast';
 import Dashboard from "./Dashboard";
 
