@@ -13,7 +13,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
-  const Dashboard = lazy(() => import('./pages/Dashboard'));
+ 
 
   // Form states
   const [formData, setFormData] = useState({
