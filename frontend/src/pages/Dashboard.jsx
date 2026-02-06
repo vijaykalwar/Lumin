@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import { statsAPI } from '../utils/api';
 import {BookOpen,Target,TrendingUp,Award,Flame,PlusCircle,Clock} from 'lucide-react';
-import DailyChallenges from '../components/DailyChallenges';
 import { showToast } from '../utils/toast';
 import React, { Suspense } from 'react';
 
