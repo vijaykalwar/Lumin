@@ -1,29 +1,50 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
   Home,
-  BookOpen,
   Target,
-  TrendingUp,
-  Clock,
-  Brain,
+  Heart,
+  Eye,
   Users,
-  Trophy,
+  Clock,
   User,
   LogOut,
   Menu,
   X,
   Sun,
-  Moon
+  Moon,
+  Flame
 } from 'lucide-react';
-import Logo from './Logo';
+
+// ✨ Unique LUMIN Logo Component
+const LuminLogo = ({ className = "" }) => (
+  <div className={`relative ${className}`}>
+    {/* Hexagon Shape with Gradient */}
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="group-hover:scale-110 transition-transform">
+      <defs>
+        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#a855f7" />
+          <stop offset="50%" stopColor="#ec4899" />
+          <stop offset="100%" stopColor="#8b5cf6" />
+        </linearGradient>
+      </defs>
+      {/* Hexagon Background */}
+      <path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" fill="url(#logoGradient)" />
+      {/* Inner Geometric "L" */}
+      <path d="M12 10H14V20H20V22H12V10Z" fill="white" fillOpacity="0.95" />
+      {/* Accent Spark */}
+      <circle cx="22" cy="12" r="2" fill="#fbbf24" className="animate-pulse" />
+    </svg>
+  </div>
+);
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -32,153 +53,193 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   };
 
-  const navLinks = [
+  const navTabs = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
-    { to: '/entries', icon: BookOpen, label: 'Entries' },
     { to: '/goals', icon: Target, label: 'Goals' },
-    { to: '/analytics', icon: TrendingUp, label: 'Analytics' },
-    { to: '/pomodoro', icon: Clock, label: 'Pomodoro' },
-    { to: '/ai-chat', icon: Brain, label: 'AI Chat' },
-    { to: '/challenges', icon: Trophy, label: 'Challenges' },
-    { to: '/community', icon: Users, label: 'Community' },
-    { to: '/profile', icon: User, label: 'Profile' }
+    { to: '/entries', icon: Heart, label: 'Habits' },
+    { to: '/analytics', icon: Eye, label: 'Vision' },
+    { to: '/community', icon: Users, label: 'Social' },
+    { to: '/pomodoro', icon: Clock, label: 'Focus' }
   ];
 
+  const isActive = (path) => location.pathname === path;
   const closeMobileMenu = () => setMobileMenuOpen(false);
+  const xpProgress = user?.xp ? (user.xp % 100) : 0;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          
-          {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-            <Logo className="h-8 w-8" />
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent hidden sm:inline">
-              LUMIN
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-gray-700 dark:text-gray-300"
-              >
-                <link.icon className="w-4 h-4" />
-                <span className="text-sm font-medium">{link.label}</span>
-              </Link>
-            ))}
-          </div>
-
-          {/* Right Side - Desktop */}
-          <div className="hidden lg:flex items-center gap-3">
+    <>
+      <nav className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-slate-700/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-14">
             
-            {/* User Info */}
-            <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
-              <div className="text-right">
-                <p className="text-sm font-semibold">{user?.name}</p>
-                <p className="text-xs opacity-90">Level {user?.level} • {user?.xp} XP</p>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
+            {/* ✨ LOGO - Unique Hexagon Design */}
+            <Link to="/dashboard" className="flex items-center gap-2 group">
+              <LuminLogo />
+              <span 
+                className="text-lg font-bold text-white hidden sm:inline"
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
+              >
+                LUMIN
+              </span>
+            </Link>
+
+            {/* Desktop Tabs */}
+            <div className="hidden lg:flex items-center gap-1">
+              {navTabs.map((tab) => (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                    ${isActive(tab.to)
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
+                      : 'text-gray-400 hover:text-white hover:bg-slate-800'
+                    }
+                  `}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </Link>
+              ))}
             </div>
 
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-yellow-500" />
-              ) : (
-                <Moon className="w-5 h-5 text-purple-600" />
-              )}
-            </button>
+            {/* Right Section */}
+            <div className="flex items-center gap-4">
+              
+              {/* Streak */}
+              <div className="hidden sm:flex items-center gap-2 text-orange-400">
+                <Flame className="w-5 h-5" />
+                <span className="text-sm font-bold">{user?.streak || 0}</span>
+              </div>
 
-            {/* Logout */}
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-600"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+              {/* Level Progress */}
+              <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white">
+                    {user?.level || 1}
+                  </div>
+                  <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full transition-all duration-500"
+                      style={{ width: `${xpProgress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-slate-800 transition-all"
+                aria-label="Toggle theme"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+
+              {/* Profile */}
+              <Link
+                to="/profile"
+                className="hidden sm:flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              >
+                <User className="w-5 h-5" />
+                <span className="text-sm font-medium">Profile</span>
+              </Link>
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="hidden sm:flex items-center gap-2 text-gray-400 hover:text-red-400 transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="text-sm font-medium">Logout</span>
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 rounded-lg bg-purple-600 text-white"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+
+            </div>
+
           </div>
-
-          {/* Mobile Menu Button */}
-          <div className="flex lg:hidden items-center gap-2">
-            {/* Theme Toggle - Mobile */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-yellow-500" />
-              ) : (
-                <Moon className="w-5 h-5 text-purple-600" />
-              )}
-            </button>
-
-            {/* Hamburger Menu */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          </div>
-
         </div>
-      </div>
+      </nav>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-          <div className="px-4 py-4 space-y-2">
-            
-            {/* User Info - Mobile */}
-            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white mb-4">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">
-                {user?.name?.charAt(0).toUpperCase()}
+        <>
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+            onClick={closeMobileMenu}
+          />
+          <div className="fixed top-14 right-0 bottom-0 w-72 bg-slate-900 border-l border-slate-700 z-50 lg:hidden animate-slideInRight overflow-y-auto">
+            <div className="p-4 space-y-2">
+              
+              {/* User Card */}
+              <div className="p-4 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl text-white mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-lg font-bold">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-bold">{user?.name}</p>
+                    <p className="text-sm opacity-80">Level {user?.level} • {user?.xp} XP</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold">{user?.name}</p>
-                <p className="text-sm opacity-90">Level {user?.level} • {user?.xp} XP</p>
-              </div>
-            </div>
 
-            {/* Navigation Links - Mobile */}
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={closeMobileMenu}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-gray-700 dark:text-gray-300"
-              >
-                <link.icon className="w-5 h-5" />
-                <span className="font-medium">{link.label}</span>
+              {/* Nav Links */}
+              {navTabs.map((tab) => (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  onClick={closeMobileMenu}
+                  className={`
+                    flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                    ${isActive(tab.to)
+                      ? 'bg-purple-600 text-white'
+                      : 'text-gray-300 hover:bg-slate-800'
+                    }
+                  `}
+                >
+                  <tab.icon className="w-5 h-5" />
+                  <span className="font-medium">{tab.label}</span>
+                </Link>
+              ))}
+
+              {/* Additional Links */}
+              <Link to="/ai-chat" onClick={closeMobileMenu} className={`flex items-center gap-3 px-4 py-3 rounded-xl ${isActive('/ai-chat') ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-slate-800'}`}>
+                <Target className="w-5 h-5" />
+                <span className="font-medium">AI Chat</span>
               </Link>
-            ))}
 
-            {/* Logout - Mobile */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 w-full mt-4"
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Logout</span>
-            </button>
+              <Link to="/challenges" onClick={closeMobileMenu} className={`flex items-center gap-3 px-4 py-3 rounded-xl ${isActive('/challenges') ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-slate-800'}`}>
+                <Target className="w-5 h-5" />
+                <span className="font-medium">Challenges</span>
+              </Link>
 
+              <Link to="/profile" onClick={closeMobileMenu} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-slate-800">
+                <User className="w-5 h-5" />
+                <span className="font-medium">Profile</span>
+              </Link>
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-900/20 w-full mt-4"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium">Logout</span>
+              </button>
+
+            </div>
           </div>
-        </div>
+        </>
       )}
-    </nav>
+    </>
   );
 }

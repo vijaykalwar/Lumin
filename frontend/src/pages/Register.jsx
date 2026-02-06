@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
-import { FcGoogle } from 'react-icons/fc';
-import { FaApple, FaFacebook } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../utils/api';
 import { showToast } from '../utils/toast';
+
 function Register() {
   const [formData, setFormData] = useState({
     name: '',
@@ -13,9 +13,8 @@ function Register() {
   });
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const { register } = useAuth(); // ✅ FIX: Get register from context
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,52 +22,41 @@ function Register() {
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError(''); // Clear error on input change
   };
 
-  
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!name || !email || !password) {
-    showToast.error('Please fill in all fields');
-    return;
-  }
+    // ✅ FIX: Destructure from formData
+    const { name, email, password } = formData;
 
-  if (password.length < 6) {
-    showToast.error('Password must be at least 6 characters');
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    const result = await authAPI.register(name, email, password);
-    
-    if (result.success) {
-      login(result.token, result.user);
-      showToast.success('🎉 Welcome to LUMIN! Let\'s start your journey!');
-      navigate('/dashboard');
-    } else {
-      showToast.error(result.message || 'Registration failed');
+    if (!name || !email || !password) {
+      showToast.error('Please fill in all fields');
+      return;
     }
-  } catch (error) {
-    showToast.error('Registration failed. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
-  // Social login handlers
-  const handleGoogleLogin = () => {
-  showToast.success('Google OAuth coming in Phase 4!');
-  };
 
-  const handleAppleLogin = () => {
-   showToast.success('Apple Sign-In coming in Phase 4!');
-  };
+    if (password.length < 6) {
+      showToast.error('Password must be at least 6 characters');
+      return;
+    }
 
-  const handleFacebookLogin = () => {
-    showToast.successt('Facebook Login coming in Phase 4!');
+    setLoading(true);
+
+    try {
+      const result = await authAPI.register(name, email, password);
+      
+      if (result.success) {
+        login(result.token, result.user);
+        showToast.success('🎉 Welcome to LUMIN! Let\'s start your journey!');
+        navigate('/dashboard');
+      } else {
+        showToast.error(result.message || 'Registration failed');
+      }
+    } catch (error) {
+      showToast.error('Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,52 +77,6 @@ const handleSubmit = async (e) => {
         </div>
 
         <div className="card">
-          
-          {/* ✅ ERROR MESSAGE */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            </div>
-          )}
-          
-          {/* Social Login Buttons */}
-          <div className="space-y-3 mb-6">
-            <button 
-              onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-4 rounded-lg transition border border-gray-300"
-            >
-              <FcGoogle size={24} />
-              <span>Continue with Google</span>
-            </button>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={handleAppleLogin}
-                className="flex items-center justify-center space-x-2 bg-black hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg transition"
-              >
-                <FaApple size={20} />
-                <span>Apple</span>
-              </button>
-
-              <button 
-                onClick={handleFacebookLogin}
-                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition"
-              >
-                <FaFacebook size={20} />
-                <span>Facebook</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-slate-800 text-gray-400">Or continue with email</span>
-            </div>
-          </div>
 
           {/* Email Form */}
           <form onSubmit={handleSubmit} className="space-y-4">

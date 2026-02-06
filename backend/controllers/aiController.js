@@ -3,69 +3,46 @@ const User = require('../models/User');
 const Entry = require('../models/Entry');
 const Goal = require('../models/Goal');
 
+// ✅ OPTIMIZED: In-memory cache for user context (5 min expiry)
+const userContextCache = new Map();
+
+// ✅ NEW: Response cache for common AI queries
+const responseCache = new Map();
+
 // Gemini AI initialization
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// ✅ OPTIMIZED: Single model instance with faster config
+const model = genAI.getGenerativeModel({ 
+  model: 'gemini-2.5-flash-lite',  // ✅ Fastest Gemini model!
+  generationConfig: {
+    maxOutputTokens: 300,     // Shorter responses = faster
+    temperature: 0.7,         // Balanced creativity
+    topP: 0.8,                // Focused responses
+    topK: 40
+  }
+});
+
 
 // ═══════════════════════════════════════════════════════════
 // 🎯 GET AI PROMPTS - Predefined suggestions
 // ═══════════════════════════════════════════════════════════
 exports.getPrompts = async (req, res) => {
   try {
-    const prompts = [
-      {
-        id: 1,
-        category: 'mood',
-        title: '😊 Analyze My Mood',
-        description: 'Get insights about your recent emotional patterns',
-        prompt: 'Analyze my mood patterns and give me insights'
-      },
-      {
-        id: 2,
-        category: 'goals',
-        title: '🎯 Plan a Goal',
-        description: 'Get help creating a structured goal plan',
-        prompt: 'Help me plan a new goal with milestones'
-      },
-      {
-        id: 3,
-        category: 'habits',
-        title: '🔄 Suggest Habits',
-        description: 'Get personalized habit recommendations',
-        prompt: 'Suggest some good habits for my lifestyle'
-      },
-      {
-        id: 4,
-        category: 'motivation',
-        title: '💪 Get Motivated',
-        description: 'Receive personalized motivation and encouragement',
-        prompt: 'I need some motivation today'
-      },
-      {
-        id: 5,
-        category: 'reflection',
-        title: '🤔 Weekly Reflection',
-        description: 'Reflect on your weekly progress and learnings',
-        prompt: 'Help me reflect on my week'
-      },
-      {
-        id: 6,
-        category: 'productivity',
-        title: '⚡ Boost Productivity',
-        description: 'Get tips to improve your productivity',
-        prompt: 'How can I be more productive?'
-      }
-    ];
-
+    // ✅ Static data - instant response
     res.status(200).json({
       success: true,
-      data: prompts
+      data: [
+        { id: 1, category: 'mood', title: '😊 Analyze My Mood', description: 'Get insights about your mood', prompt: 'Analyze my mood patterns' },
+        { id: 2, category: 'goals', title: '🎯 Plan a Goal', description: 'Create a goal plan', prompt: 'Help me plan a goal' },
+        { id: 3, category: 'habits', title: '🔄 Suggest Habits', description: 'Get habit recommendations', prompt: 'Suggest habits for me' },
+        { id: 4, category: 'motivation', title: '💪 Get Motivated', description: 'Get motivation', prompt: 'I need motivation' },
+        { id: 5, category: 'reflection', title: '🤔 Weekly Reflection', description: 'Reflect on your week', prompt: 'Help me reflect' },
+        { id: 6, category: 'productivity', title: '⚡ Boost Productivity', description: 'Productivity tips', prompt: 'How to be more productive?' }
+      ]
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch prompts',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch prompts' });
   }
 };
 
@@ -74,9 +51,17 @@ exports.getPrompts = async (req, res) => {
 // ═══════════════════════════════════════════════════════════
 exports.analyzeMood = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
+    
+    // ✅ Check cache first (1 hour for mood analysis)
+    const cacheKey = `mood_${userId}`;
+    if (responseCache.has(cacheKey)) {
+      const cached = responseCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < 3600000) { // 1 hour cache
+        return res.status(200).json({ success: true, data: cached.data, cached: true });
+      }
+    }
 
-    // Get last 7 days entries
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -85,63 +70,30 @@ exports.analyzeMood = async (req, res) => {
       createdAt: { $gte: sevenDaysAgo }
     })
       .sort({ createdAt: -1 })
-      .limit(10)
-      .select('mood moodIntensity notes tags category createdAt');
+      .limit(5) // ✅ Reduced from 10 to 5
+      .select('mood moodIntensity category')
+      .lean();
 
     if (recentEntries.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No recent entries found to analyze. Create some journal entries first!'
-      });
+      return res.status(400).json({ success: false, message: 'No recent entries found.' });
     }
 
-    // Prepare context for AI
-    const moodSummary = recentEntries.map(entry => ({
-      mood: entry.mood,
-      intensity: entry.moodIntensity,
-      category: entry.category,
-      tags: entry.tags,
-      date: entry.createdAt.toDateString()
-    }));
+    // ✅ ULTRA SHORT PROMPT
+    const prompt = `Mood analysis for: ${JSON.stringify(recentEntries.map(e => e.mood))}. Give: 1) Pattern 2) 2 tips. Max 100 words.`;
 
-    const prompt = `
-You are a compassionate AI mood analyst and life coach. Analyze the following mood data from the user's journal entries over the past week:
-
-${JSON.stringify(moodSummary, null, 2)}
-
-Please provide:
-1. **Overall Mood Pattern**: What's the general emotional trend?
-2. **Insights**: What might be contributing to these moods?
-3. **Recommendations**: 3-4 actionable suggestions to improve wellbeing
-4. **Positive Highlights**: What's going well?
-
-Keep your response empathetic, encouraging, and actionable. Use emojis where appropriate. Keep it under 300 words.
-`;
-
-    // Call Gemini AI
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     const analysis = result.response.text();
 
-    res.status(200).json({
-      success: true,
-      data: {
-        analysis,
-        entriesAnalyzed: recentEntries.length,
-        dateRange: {
-          from: sevenDaysAgo.toDateString(),
-          to: new Date().toDateString()
-        }
-      }
-    });
+    const responseData = { analysis, entriesAnalyzed: recentEntries.length };
+    
+    // Cache the response
+    responseCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+
+    res.status(200).json({ success: true, data: responseData });
 
   } catch (error) {
     console.error('AI Mood Analysis Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to analyze mood',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to analyze mood' });
   }
 };
 
@@ -153,50 +105,20 @@ exports.planGoal = async (req, res) => {
     const { goalIdea, category, timeframe } = req.body;
 
     if (!goalIdea) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide a goal idea'
-      });
+      return res.status(400).json({ success: false, message: 'Please provide a goal idea' });
     }
 
-    const prompt = `
-You are an expert goal-setting coach. A user wants to achieve this goal:
+    // ✅ ULTRA SHORT PROMPT
+    const prompt = `Create SMART goal for: "${goalIdea}". Format: Title, Metric, 3 Milestones, 2 Action Steps. Max 150 words.`;
 
-**Goal Idea**: ${goalIdea}
-**Category**: ${category || 'Not specified'}
-**Timeframe**: ${timeframe || 'Not specified'}
-
-Please help them create a SMART goal plan with:
-
-1. **Refined Goal Title**: A clear, specific goal statement
-2. **Measurable Metric**: What will be measured? (e.g., "kilometers", "hours", "completed tasks")
-3. **Target Value**: Specific number to achieve
-4. **Milestones**: 4-5 progressive milestones with target values
-5. **Action Steps**: 3-4 concrete first steps
-6. **Success Tips**: 2-3 tips for staying motivated
-
-Format your response in a structured way. Be encouraging and realistic!
-`;
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     const plan = result.response.text();
 
-    res.status(200).json({
-      success: true,
-      data: {
-        plan,
-        originalIdea: goalIdea
-      }
-    });
+    res.status(200).json({ success: true, data: { plan, originalIdea: goalIdea } });
 
   } catch (error) {
     console.error('AI Goal Planning Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to plan goal',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to plan goal' });
   }
 };
 
@@ -205,62 +127,36 @@ Format your response in a structured way. Be encouraging and realistic!
 // ═══════════════════════════════════════════════════════════
 exports.suggestHabits = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user._id.toString();
+    
+    // ✅ Check cache (1 hour for habit suggestions)
+    const cacheKey = `habits_${userId}`;
+    if (responseCache.has(cacheKey)) {
+      const cached = responseCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < 3600000) {
+        return res.status(200).json({ success: true, data: cached.data, cached: true });
+      }
+    }
 
-    // Get user's current goals and recent entries
-    const [goals, recentEntries] = await Promise.all([
-      Goal.find({ user: userId, status: 'active' })
-        .select('title category')
-        .limit(5),
-      Entry.find({ user: userId })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .select('category tags')
-    ]);
+    const goals = await Goal.find({ user: userId, status: 'active' })
+      .select('title category')
+      .limit(3)
+      .lean();
 
-    const userContext = {
-      activeGoals: goals.map(g => ({ title: g.title, category: g.category })),
-      recentCategories: [...new Set(recentEntries.map(e => e.category))],
-      commonTags: [...new Set(recentEntries.flatMap(e => e.tags))]
-    };
+    // ✅ ULTRA SHORT PROMPT
+    const prompt = `Suggest 3 habits for goals: ${goals.map(g => g.title).join(', ') || 'general improvement'}. Format: Habit + Why + How. Max 100 words.`;
 
-    const prompt = `
-You are a habit formation expert. Based on this user's context:
-
-${JSON.stringify(userContext, null, 2)}
-
-Suggest 5 powerful habits that would help them grow. For each habit:
-
-1. **Habit Name**: Clear, actionable
-2. **Why It Matters**: Brief benefit (1-2 sentences)
-3. **How to Start**: Simple first step
-4. **Frequency**: Daily, weekly, etc.
-
-Make suggestions practical, diverse, and aligned with their goals. Use emojis for engagement!
-`;
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const result = await model.generateContent(prompt);
     const suggestions = result.response.text();
 
-    res.status(200).json({
-      success: true,
-      data: {
-        suggestions,
-        basedOn: {
-          goalsCount: goals.length,
-          entriesAnalyzed: recentEntries.length
-        }
-      }
-    });
+    const responseData = { suggestions, basedOn: { goalsCount: goals.length } };
+    responseCache.set(cacheKey, { data: responseData, timestamp: Date.now() });
+
+    res.status(200).json({ success: true, data: responseData });
 
   } catch (error) {
     console.error('AI Habit Suggestion Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to suggest habits',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to suggest habits' });
   }
 };
 
@@ -269,133 +165,92 @@ Make suggestions practical, diverse, and aligned with their goals. Use emojis fo
 // ═══════════════════════════════════════════════════════════
 exports.getMotivation = async (req, res) => {
   try {
-    const { situation } = req.body;
     const user = await User.findById(req.user._id)
-      .select('name level xp streak');
+      .select('name level streak')
+      .lean();
 
-    const prompt = `
-You are an inspiring motivational coach. The user needs motivation in this situation:
+    // ✅ ULTRA SHORT PROMPT
+    const prompt = `Motivate ${user.name} (Level ${user.level}, ${user.streak} day streak). 80 words max. Be energizing!`;
 
-**Situation**: ${situation || 'General motivation needed'}
-
-**User Stats**:
-- Name: ${user.name}
-- Level: ${user.level}
-- XP: ${user.xp}
-- Current Streak: ${user.streak} days
-
-Provide a personalized, energizing message (150-200 words) that:
-1. Acknowledges their progress (use their stats!)
-2. Addresses their specific situation
-3. Gives 2-3 actionable next steps
-4. Ends with a powerful quote or affirmation
-
-Be genuine, empowering, and enthusiastic! 🔥
-`;
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const result = await model.generateContent(prompt);
     const motivation = result.response.text();
 
     res.status(200).json({
       success: true,
-      data: {
-        motivation,
-        userStats: {
-          level: user.level,
-          xp: user.xp,
-          streak: user.streak
-        }
-      }
+      data: { motivation, userStats: { level: user.level, streak: user.streak } }
     });
 
   } catch (error) {
     console.error('AI Motivation Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate motivation',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to generate motivation' });
   }
 };
 
 // ═══════════════════════════════════════════════════════════
-// 💬 CHAT - General AI conversation
+// 💬 CHAT - General AI conversation (ULTRA OPTIMIZED)
 // ═══════════════════════════════════════════════════════════
 exports.chat = async (req, res) => {
   try {
     const { message, conversationHistory } = req.body;
 
     if (!message) {
-      return res.status(400).json({
-        success: false,
-        message: 'Message is required'
-      });
+      return res.status(400).json({ success: false, message: 'Message is required' });
     }
 
-    const user = await User.findById(req.user._id)
-      .select('name level xp streak badges');
+    // ✅ Get user context from cache or fetch
+    const cacheKey = req.user._id.toString();
+    let user;
 
-    // Get recent context
-    const [recentEntries, activeGoals] = await Promise.all([
-      Entry.find({ user: req.user._id })
-        .sort({ createdAt: -1 })
-        .limit(3)
-        .select('mood category'),
-      Goal.find({ user: req.user._id, status: 'active' })
-        .limit(3)
-        .select('title progressPercentage')
-    ]);
+    if (userContextCache.has(cacheKey)) {
+      const cached = userContextCache.get(cacheKey);
+      if (Date.now() - cached.timestamp < 300000) {
+        user = cached.data.user;
+      }
+    }
 
-    const systemContext = `
-You are LUMIN AI, a supportive and insightful personal growth assistant. You help users with:
-- Journaling and self-reflection
-- Goal setting and achievement
-- Mood tracking and emotional wellbeing
-- Productivity and habits
-- Personal development
+    if (!user) {
+      user = await User.findById(req.user._id)
+        .select('name level streak')
+        .lean();
+      userContextCache.set(cacheKey, { data: { user }, timestamp: Date.now() });
+    }
 
-**User Context**:
-- Name: ${user.name}
-- Level: ${user.level}
-- XP: ${user.xp}
-- Streak: ${user.streak} days
-- Badges: ${user.badges.length}
-- Recent mood: ${recentEntries[0]?.mood || 'Unknown'}
-- Active goals: ${activeGoals.length}
+    // ✅ MINIMAL CONTEXT for speed
+    const lastMsg = conversationHistory?.slice(-1)[0]?.content || '';
+    
+    // ✅ ULTRA SHORT SYSTEM PROMPT
+    const prompt = `You're LUMIN AI, helping ${user.name} (L${user.level}).
+${lastMsg ? `Previous: ${lastMsg.substring(0, 50)}...` : ''}
+User: ${message}
+Reply in 100-150 words. Be warm, actionable, use emojis.`;
 
-**Guidelines**:
-- Be warm, empathetic, and encouraging
-- Give actionable advice
-- Reference their progress when relevant
-- Keep responses concise (150-250 words)
-- Use emojis naturally
-- If they ask about features, explain LUMIN's capabilities (journaling, goals, pomodoro, challenges, etc.)
-
-**Previous conversation**:
-${conversationHistory ? JSON.stringify(conversationHistory.slice(-3)) : 'None'}
-
-**User's message**: ${message}
-`;
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    const result = await model.generateContent(systemContext);
+    const result = await model.generateContent(prompt);
     const response = result.response.text();
 
     res.status(200).json({
       success: true,
-      data: {
-        response,
-        timestamp: new Date()
-      }
+      data: { response, timestamp: new Date() }
     });
 
   } catch (error) {
     console.error('AI Chat Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to process chat',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to process chat' });
   }
 };
+
+// ═══════════════════════════════════════════════════════════
+// 🧹 Clear caches (utility - call every hour)
+// ═══════════════════════════════════════════════════════════
+setInterval(() => {
+  const now = Date.now();
+  
+  // Clean user context cache (>5 min old)
+  for (const [key, value] of userContextCache) {
+    if (now - value.timestamp > 300000) userContextCache.delete(key);
+  }
+  
+  // Clean response cache (>1 hour old)
+  for (const [key, value] of responseCache) {
+    if (now - value.timestamp > 3600000) responseCache.delete(key);
+  }
+}, 600000); // Run every 10 minutes

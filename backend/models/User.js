@@ -87,4 +87,11 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// ════════════════════════════════════════════════════════════
+// ✅ INDEXES FOR PERFORMANCE
+// ════════════════════════════════════════════════════════════
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ level: -1 }); // For leaderboards
+userSchema.index({ xp: -1 }); // For ranking
+
 module.exports = mongoose.model('User', userSchema);

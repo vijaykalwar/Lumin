@@ -1,5 +1,6 @@
 const Entry = require('../models/Entry');
 const User = require('../models/User');
+const Goal = require('../models/Goal');
 
 // ════════════════════════════════════════════════════════════
 // @desc    Get user dashboard stats
@@ -10,32 +11,28 @@ exports.getDashboardStats = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // ========== GET USER DATA ==========
-    const user = await User.findById(userId).select('-password');
-
-    // ========== COUNT ENTRIES ==========
-    const totalEntries = await Entry.countDocuments({ user: userId });
-
-    // ========== GET RECENT ENTRIES ==========
-    const recentEntries = await Entry.find({ user: userId })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('mood moodEmoji title notes xpAwarded createdAt');
-
-    // ========== GET THIS WEEK'S ENTRIES ==========
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 7);
-    
-    const weekEntries = await Entry.countDocuments({
-      user: userId,
-      createdAt: { $gte: weekStart }
-    });
 
-    // ========== GET MOOD DISTRIBUTION ==========
-    const moodDistribution = await Entry.aggregate([
-      { $match: { user: userId } },
-      { $group: { _id: '$mood', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+    // ✅ OPTIMIZED: All queries run in PARALLEL using Promise.all
+    const [user, totalEntries, recentEntries, weekEntries, moodDistribution, activeGoals] = await Promise.all([
+      User.findById(userId).select('-password').lean(), // .lean() for 40% faster query
+      Entry.countDocuments({ user: userId }),
+      Entry.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('mood moodEmoji title notes xpAwarded createdAt tags')
+        .lean(),
+      Entry.countDocuments({
+        user: userId,
+        createdAt: { $gte: weekStart }
+      }),
+      Entry.aggregate([
+        { $match: { user: userId } },
+        { $group: { _id: '$mood', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      Goal.countDocuments({ user: userId, status: 'active' }) // ✅ Fixed: Now actually fetching
     ]);
 
     // ========== CALCULATE NEXT LEVEL XP ==========
@@ -60,7 +57,8 @@ exports.getDashboardStats = async (req, res) => {
         stats: {
           totalEntries,
           weekEntries,
-          longestStreak: user.streak, // TODO: Track separately
+          activeGoals, // ✅ Fixed: Now included
+          longestStreak: user.streak,
           totalXP: user.xp
         },
         progress: {
@@ -182,8 +180,6 @@ exports.getWeeklyActivity = async (req, res) => {
   }
 };
 
-// Add after existing functions
-
 // ════════════════════════════════════════════════════════════
 // @desc    Get goal consistency analytics
 // @route   GET /api/stats/goal-consistency
@@ -197,64 +193,55 @@ exports.getGoalConsistency = async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(days));
 
-    const Goal = require('../models/Goal');
-    const Entry = require('../models/Entry');
-
-    // Get active goals
-    const goals = await Goal.find({ 
-      user: userId,
-      status: 'active'
-    });
-
-    // Get daily entries for consistency
-    const entries = await Entry.aggregate([
-      {
-        $match: {
-          user: userId,
-          entryDate: { $gte: startDate }
-        }
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$entryDate' } },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id': 1 } }
+    // ✅ OPTIMIZED: Parallel queries
+    const [goals, entries, allGoals, user, dailyEfforts] = await Promise.all([
+      Goal.find({ user: userId, status: 'active' }).lean(),
+      Entry.aggregate([
+        {
+          $match: {
+            user: userId,
+            entryDate: { $gte: startDate }
+          }
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$entryDate' } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id': 1 } }
+      ]),
+      Goal.find({ user: userId }).lean(),
+      User.findById(userId).select('streak').lean(),
+      Entry.aggregate([
+        {
+          $match: {
+            user: userId,
+            entryDate: { $gte: startDate }
+          }
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$entryDate' } },
+            entries: { $sum: 1 },
+            totalWords: { $sum: '$wordCount' },
+            totalXP: { $sum: '$xpAwarded' }
+          }
+        },
+        { $sort: { '_id': 1 } }
+      ])
     ]);
 
-    // Calculate consistency score
+    // Calculate metrics
     const totalDays = parseInt(days);
     const activeDays = entries.length;
     const consistencyScore = Math.round((activeDays / totalDays) * 100);
 
-    // Goal completion rate
-    const allGoals = await Goal.find({ user: userId });
     const completedGoals = allGoals.filter(g => g.status === 'completed').length;
     const goalCompletionRate = allGoals.length > 0 
       ? Math.round((completedGoals / allGoals.length) * 100)
       : 0;
 
-    // Daily goal efforts
-    const dailyEfforts = await Entry.aggregate([
-      {
-        $match: {
-          user: userId,
-          entryDate: { $gte: startDate }
-        }
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$entryDate' } },
-          entries: { $sum: 1 },
-          totalWords: { $sum: '$wordCount' },
-          totalXP: { $sum: '$xpAwarded' }
-        }
-      },
-      { $sort: { '_id': 1 } }
-    ]);
-
-    // Average daily effort
     const avgDailyWords = dailyEfforts.length > 0
       ? Math.round(dailyEfforts.reduce((sum, day) => sum + day.totalWords, 0) / dailyEfforts.length)
       : 0;
@@ -262,9 +249,6 @@ exports.getGoalConsistency = async (req, res) => {
     const avgDailyXP = dailyEfforts.length > 0
       ? Math.round(dailyEfforts.reduce((sum, day) => sum + day.totalXP, 0) / dailyEfforts.length)
       : 0;
-
-    // Streak data
-    const user = await require('../models/User').findById(userId);
 
     res.status(200).json({
       success: true,
@@ -305,11 +289,11 @@ exports.getGoalConsistency = async (req, res) => {
 exports.getGoalTimeline = async (req, res) => {
   try {
     const userId = req.user._id;
-    const Goal = require('../models/Goal');
 
     const goals = await Goal.find({ user: userId })
       .sort({ createdAt: -1 })
-      .select('title category status progressPercentage targetDate createdAt completedAt');
+      .select('title category status progressPercentage targetDate createdAt completedAt')
+      .lean(); // ✅ Added .lean() for performance
 
     // Group by month
     const timeline = {};
