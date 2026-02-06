@@ -5,6 +5,7 @@ import {User,Mail,MapPin,Briefcase,Calendar,Edit2,
   Save, X,Lock, Settings,Trophy,TrendingUp,Target,Clock,Award, Loader2
 } from 'lucide-react';
 import { showToast } from '../utils/toast';
+import Dashboard from "./Dashboard";
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
