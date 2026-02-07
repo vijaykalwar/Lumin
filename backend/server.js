@@ -23,29 +23,13 @@ const app = express();
 // ✅ Helmet - Security headers
 app.use(helmet());
 
-// ✅ CORS - Cross-origin resource sharing
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://lumin-app.vercel.app",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow all origins in development
-    }
-  },
+// ✅ CORS - Allow all origins for now
+app.use(cors({
+  origin: true,
   credentials: true,
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // ✅ Response compression
 app.use(compression());
