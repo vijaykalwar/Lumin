@@ -125,6 +125,27 @@ const handleSaveProfile = async () => {
     setSaveLoading(false);
   };
 
+  // Handle avatar upload
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showToast.error('Please upload an image file');
+      return;
+    }
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    // TODO: Implement actual upload to Cloudinary
+    showToast.info('Avatar upload coming soon!');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
