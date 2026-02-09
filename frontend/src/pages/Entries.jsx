@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { entryAPI } from '../utils/api';
 import { showToast } from '../utils/toast';
+import BottomNav from '../components/BottomNav';
 import {
   BookOpen,
   Search,
@@ -411,6 +412,8 @@ export default function Entries() {
         )}
 
       </div>
+
+      <BottomNav />
     </div>
   );
 }

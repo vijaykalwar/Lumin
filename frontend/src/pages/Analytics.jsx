@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { statsAPI } from '../utils/api';
 import { 
   BarChart, Bar, AreaChart, Area, Cell,
@@ -424,6 +425,8 @@ function Analytics() {
         )}
 
       </div>
+
+      <BottomNav />
     </div>
   );
 }
