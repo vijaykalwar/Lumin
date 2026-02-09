@@ -32,9 +32,17 @@ exports.protect = async (req, res, next) => {
 
     try {
       // ========== VERIFY TOKEN ==========
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret && process.env.NODE_ENV === 'production') {
+        return res.status(500).json({
+          success: false,
+          message: 'Server configuration error. Please contact support.'
+        });
+      }
+      
       const decoded = jwt.verify(
         token,
-        process.env.JWT_SECRET || 'lumin-secret-key'
+        jwtSecret || 'lumin-secret-key'
       );
 
       // decoded = { id: 'user_id', iat: timestamp, exp: timestamp }
@@ -112,12 +120,18 @@ exports.optionalAuth = async (req, res, next) => {
     }
 
     try {
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret && process.env.NODE_ENV === 'production') {
+        req.user = null;
+        return next();
+      }
+      
       const decoded = jwt.verify(
         token,
-        process.env.JWT_SECRET || 'lumin-secret-key'
+        jwtSecret || 'lumin-secret-key'
       );
 
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded.id).select('-password').lean();
       next();
 
     } catch (error) {

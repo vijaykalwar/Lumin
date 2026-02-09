@@ -72,8 +72,9 @@ export default function AIChat() {
     setInput('');
     setLoading(true);
 
+    let result;
     try {
-      const result = await aiAPI.chat({
+      result = await aiAPI.chat({
         message: messageText,
         conversationHistory: messages
       });
@@ -86,13 +87,46 @@ export default function AIChat() {
         };
         setMessages(prev => [...prev, aiMessage]);
       } else {
-        throw new Error(result.message);
+        // Show actual error message from backend with better formatting
+        let errorContent = result.message || 'Failed to process your message. Please try again.';
+        
+        // Format leaked API key error better
+        if (result.message?.includes('leaked')) {
+          errorContent = '⚠️ API key issue detected. Please contact support or check API configuration.';
+        }
+        
+        const errorMessage = {
+          role: 'assistant',
+          content: `❌ ${errorContent}`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        console.error('AI API Error:', result);
       }
     } catch (error) {
       console.error('Chat error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        result: result
+      });
+      
+      let errorContent = '❌ Oops! I encountered an error. Please try again.';
+      
+      // More specific error messages based on error type
+      if (result?.message) {
+        errorContent = `❌ ${result.message}`;
+      } else if (error.message) {
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          errorContent = '❌ Network error. Please check your internet connection.';
+        } else {
+          errorContent = `❌ Error: ${error.message}`;
+        }
+      }
+      
       const errorMessage = {
         role: 'assistant',
-        content: '❌ Oops! I encountered an error. Please try again.',
+        content: errorContent,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -108,14 +142,29 @@ export default function AIChat() {
       gradient: 'from-red-500 to-pink-500',
       action: async () => {
         setLoading(true);
-        const result = await aiAPI.analyzeMood();
-        setLoading(false);
-        if (result.success) {
+        try {
+          const result = await aiAPI.analyzeMood();
+          if (result.success) {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: result.data.analysis,
+              timestamp: new Date()
+            }]);
+          } else {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: result.message || 'Failed to analyze mood. Please try again.',
+              timestamp: new Date()
+            }]);
+          }
+        } catch (error) {
           setMessages(prev => [...prev, {
             role: 'assistant',
-            content: result.data.analysis,
+            content: '❌ Failed to analyze mood. Please try again.',
             timestamp: new Date()
           }]);
+        } finally {
+          setLoading(false);
         }
       }
     },
@@ -131,14 +180,29 @@ export default function AIChat() {
       gradient: 'from-orange-500 to-yellow-500',
       action: async () => {
         setLoading(true);
-        const result = await aiAPI.getMotivation({ situation: 'general' });
-        setLoading(false);
-        if (result.success) {
+        try {
+          const result = await aiAPI.getMotivation({ situation: 'general' });
+          if (result.success) {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: result.data.motivation,
+              timestamp: new Date()
+            }]);
+          } else {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: result.message || 'Failed to get motivation. Please try again.',
+              timestamp: new Date()
+            }]);
+          }
+        } catch (error) {
           setMessages(prev => [...prev, {
             role: 'assistant',
-            content: result.data.motivation,
+            content: '❌ Failed to get motivation. Please try again.',
             timestamp: new Date()
           }]);
+        } finally {
+          setLoading(false);
         }
       }
     },
@@ -148,14 +212,29 @@ export default function AIChat() {
       gradient: 'from-purple-500 to-pink-500',
       action: async () => {
         setLoading(true);
-        const result = await aiAPI.suggestHabits();
-        setLoading(false);
-        if (result.success) {
+        try {
+          const result = await aiAPI.suggestHabits();
+          if (result.success) {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: result.data.suggestions,
+              timestamp: new Date()
+            }]);
+          } else {
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: result.message || 'Failed to suggest habits. Please try again.',
+              timestamp: new Date()
+            }]);
+          }
+        } catch (error) {
           setMessages(prev => [...prev, {
             role: 'assistant',
-            content: result.data.suggestions,
+            content: '❌ Failed to suggest habits. Please try again.',
             timestamp: new Date()
           }]);
+        } finally {
+          setLoading(false);
         }
       }
     }

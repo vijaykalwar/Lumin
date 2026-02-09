@@ -142,8 +142,19 @@ const handleSaveProfile = async () => {
       return;
     }
 
-    // TODO: Implement actual upload to Cloudinary
-    showToast.info('Avatar upload coming soon!');
+    setSaveLoading(true);
+    const result = await profileAPI.uploadAvatar(file);
+    
+    if (result.success) {
+      showToast.success('✅ Avatar uploaded successfully!');
+      setProfile(result.data.user);
+      updateUser(result.data.user);
+      // Reload profile to get updated data
+      await loadProfile();
+    } else {
+      showToast.error(result.message || 'Failed to upload avatar');
+    }
+    setSaveLoading(false);
   };
 
   if (loading) {
@@ -197,14 +208,22 @@ const handleSaveProfile = async () => {
                 
                 {/* Avatar */}
                 <div className="text-center mb-6">
-                  <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-purple-500">
+                  <div className="relative w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-purple-500 group cursor-pointer">
                     <img
                       src={profile?.avatar || `https://ui-avatars.com/api/?name=${profile?.name}&background=random`}                     
                       alt={profile?.name}
                       className="w-full h-full object-cover"
                     />
-                    <input type="file" accept="image/*" onChange={handleAvatarUpload} />
-
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Edit2 className="w-6 h-6 text-white" />
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleAvatarUpload}
+                      disabled={saveLoading}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                    />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
                     {profile?.name}

@@ -53,7 +53,7 @@ exports.completeChallenge = async (req, res) => {
       });
     }
 
-    // Find the specific challenge
+    // Find the specific challenge (needs to be Mongoose document to modify)
     const challenge = dailyChallenge.challenges.id(challengeId);
 
     if (!challenge) {
@@ -121,7 +121,8 @@ exports.getChallengeHistory = async (req, res) => {
       date: { $gte: startDate }
     })
     .sort({ date: -1 })
-    .select('-__v');
+    .select('-__v')
+    .lean();
 
     // Calculate statistics
     const stats = {

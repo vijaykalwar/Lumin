@@ -1,6 +1,8 @@
 // controllers/userController.js
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const cloudinary = require('../config/cloudinary');
+const { Readable } = require('stream');
 
 /**
  * Helper: remove sensitive fields before sending user to client
@@ -213,10 +215,82 @@ const getStats = async (req, res) => {
   }
 };
 
+/**
+ * UPLOAD AVATAR
+ * Uploads image to Cloudinary and updates user avatar URL
+ */
+const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file provided' });
+    }
+
+    // Validate file type
+    if (!req.file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ success: false, message: 'File must be an image' });
+    }
+
+    // Validate file size (5MB max)
+    if (req.file.size > 5 * 1024 * 1024) {
+      return res.status(400).json({ success: false, message: 'Image size must be less than 5MB' });
+    }
+
+    // Convert buffer to stream for Cloudinary
+    const stream = Readable.from(req.file.buffer);
+    stream.path = req.file.originalname;
+
+    // Upload to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'lumin/avatars',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+            { quality: 'auto', fetch_format: 'auto' }
+          ],
+          public_id: `avatar_${req.user._id}_${Date.now()}`
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.pipe(uploadStream);
+    });
+
+    // Update user avatar
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.avatar = uploadResult.secure_url;
+    await user.save();
+
+    const safe = safeUserObject(user);
+    res.json({ 
+      success: true, 
+      message: 'Avatar uploaded successfully',
+      data: { avatar: uploadResult.secure_url, user: safe }
+    });
+  } catch (err) {
+    console.error('uploadAvatar error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: err.message || 'Failed to upload avatar' 
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   updateSettings,
   changePassword,
-  getStats
+  getStats,
+  uploadAvatar
 };

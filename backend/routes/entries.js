@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { validateEntry } = require('../middleware/validation');
 const {
   createEntry,
   getEntries,
@@ -19,7 +20,7 @@ router.get('/today', protect, getTodayEntry);
 
 // Main CRUD routes
 router.route('/')
-  .post(protect, createEntry)      // Create entry
+  .post(protect, validateEntry, createEntry)      // Create entry
   .get(protect, getEntries);       // Get all entries
 
 router.route('/:id')

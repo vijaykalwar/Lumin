@@ -844,6 +844,30 @@ export const profileAPI = {
       console.error('Get stats error:', error);
       return { success: false, message: error.message };
     }
+  },
+
+  /**
+   * Upload avatar image
+   */
+  uploadAvatar: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const token = getToken();
+      const response = await fetch(`${API_BASE_URL}/profile/avatar`, {
+        method: 'POST',
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+          // Don't set Content-Type - browser will set it with boundary
+        },
+        body: formData
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Upload avatar error:', error);
+      return { success: false, message: error.message };
+    }
   }
 };
 

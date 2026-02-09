@@ -14,9 +14,14 @@ const MIN_PASSWORD_LENGTH = 6;
 
 // Generate JWT token
 const generateToken = (userId) => {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET is required in production');
+  }
+  
   return jwt.sign(
     { id: userId },
-    process.env.JWT_SECRET || 'lumin-secret-key',
+    jwtSecret || 'lumin-secret-key',
     { expiresIn: JWT_EXPIRES_IN }
   );
 };

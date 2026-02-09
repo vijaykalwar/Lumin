@@ -51,7 +51,7 @@ exports.createEntry = async (req, res) => {
     const existingEntry = await Entry.findOne({
       user: req.user._id,
       entryDate: { $gte: today }
-    });
+    }).lean();
 
     if (existingEntry) {
       return res.status(400).json({
@@ -224,7 +224,8 @@ exports.getEntries = async (req, res) => {
       .sort({ entryDate: -1 })  // Newest first
       .limit(parseInt(limit))
       .skip(skip)
-      .select('-__v');
+      .select('-__v')
+      .lean();
 
     const total = await Entry.countDocuments(filter);
 
@@ -259,7 +260,7 @@ exports.getEntries = async (req, res) => {
 // ════════════════════════════════════════════════════════════
 exports.getEntry = async (req, res) => {
   try {
-    const entry = await Entry.findById(req.params.id);
+    const entry = await Entry.findById(req.params.id).lean();
 
     // ========== CHECK EXISTS ==========
     if (!entry) {
@@ -453,7 +454,7 @@ exports.getTodayEntry = async (req, res) => {
     const entry = await Entry.findOne({
       user: req.user._id,
       entryDate: { $gte: today, $lt: tomorrow }
-    });
+    }).lean();
 
     if (!entry) {
       return res.status(200).json({

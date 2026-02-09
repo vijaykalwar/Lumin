@@ -61,15 +61,18 @@ exports.getFeed = async (req, res) => {
       filter.type = type;
     }
 
-    const posts = await Post.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .populate('user', 'name xp level streak badges')
-      .populate('comments.user', 'name')
-      .populate('reactions.user', 'name');
-
-    const total = await Post.countDocuments(filter);
+    // ✅ OPTIMIZED: Run queries in parallel
+    const [posts, total] = await Promise.all([
+      Post.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit))
+        .skip((parseInt(page) - 1) * parseInt(limit))
+        .populate('user', 'name xp level streak badges')
+        .populate('comments.user', 'name')
+        .populate('reactions.user', 'name')
+        .lean(),
+      Post.countDocuments(filter)
+    ]);
 
     res.status(200).json({
       success: true,

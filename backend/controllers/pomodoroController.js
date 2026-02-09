@@ -117,12 +117,15 @@ exports.getSessions = async (req, res) => {
   try {
     const { limit = 20, page = 1 } = req.query;
 
-    const sessions = await PomodoroSession.find({ user: req.user._id })
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit));
-
-    const total = await PomodoroSession.countDocuments({ user: req.user._id });
+    // ✅ OPTIMIZED: Run queries in parallel
+    const [sessions, total] = await Promise.all([
+      PomodoroSession.find({ user: req.user._id })
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit))
+        .skip((parseInt(page) - 1) * parseInt(limit))
+        .lean(),
+      PomodoroSession.countDocuments({ user: req.user._id })
+    ]);
 
     res.status(200).json({
       success: true,
@@ -158,7 +161,9 @@ exports.getTodaySessions = async (req, res) => {
     const sessions = await PomodoroSession.find({
       user: req.user._id,
       createdAt: { $gte: today }
-    }).sort({ createdAt: -1 });
+    })
+    .sort({ createdAt: -1 })
+    .lean();
 
     // Calculate stats
     const stats = {
@@ -206,7 +211,7 @@ exports.getStats = async (req, res) => {
     const sessions = await PomodoroSession.find({
       user: req.user._id,
       createdAt: { $gte: startDate }
-    });
+    }).lean();
 
     // Calculate detailed stats
     const stats = {

@@ -9,19 +9,45 @@ const userContextCache = new Map();
 // ✅ NEW: Response cache for common AI queries
 const responseCache = new Map();
 
-// Gemini AI initialization
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Gemini AI initialization with error handling
+if (!process.env.GEMINI_API_KEY) {
+  console.error('❌ ERROR: GEMINI_API_KEY environment variable is required!');
+}
+
+const genAI = process.env.GEMINI_API_KEY 
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  : null;
 
 // ✅ OPTIMIZED: Single model instance with faster config
-const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.5-flash-lite',  // ✅ Fastest Gemini model!
-  generationConfig: {
-    maxOutputTokens: 300,     // Shorter responses = faster
-    temperature: 0.7,         // Balanced creativity
-    topP: 0.8,                // Focused responses
-    topK: 40
+const getModel = () => {
+  if (!genAI) {
+    throw new Error('Gemini AI not configured. Please set GEMINI_API_KEY environment variable.');
   }
-});
+  
+  try {
+    return genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash-lite',  // ✅ Original model name
+      generationConfig: {
+        maxOutputTokens: 500,     // Increased for better responses
+        temperature: 0.7,         // Balanced creativity
+        topP: 0.8,                // Focused responses
+        topK: 40
+      }
+    });
+  } catch (error) {
+    // If model doesn't exist, try fallback
+    console.warn('⚠️ Model gemini-2.5-flash-lite not available, trying fallback:', error.message);
+    return genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',  // Fallback model
+      generationConfig: {
+        maxOutputTokens: 500,
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40
+      }
+    });
+  }
+};
 
 
 // ═══════════════════════════════════════════════════════════
@@ -81,6 +107,7 @@ exports.analyzeMood = async (req, res) => {
     // ✅ ULTRA SHORT PROMPT
     const prompt = `Mood analysis for: ${JSON.stringify(recentEntries.map(e => e.mood))}. Give: 1) Pattern 2) 2 tips. Max 100 words.`;
 
+    const model = getModel();
     const result = await model.generateContent(prompt);
     const analysis = result.response.text();
 
@@ -93,7 +120,31 @@ exports.analyzeMood = async (req, res) => {
 
   } catch (error) {
     console.error('AI Mood Analysis Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to analyze mood' });
+    console.error('Error Details:', error.message, error.stack);
+    
+    let errorMessage = 'Failed to analyze mood';
+    let statusCode = 500;
+    
+    if (error.message?.includes('API_KEY') || error.message?.includes('not configured')) {
+      errorMessage = 'AI service not configured. Please set GEMINI_API_KEY.';
+    } else if (error.message?.includes('leaked') || error.status === 403) {
+      errorMessage = '⚠️ API key has been reported as leaked. Please generate a new API key from Google AI Studio.';
+      statusCode = 403;
+    } else if (error.message?.includes('API key not valid')) {
+      errorMessage = 'Invalid API key. Please check your GEMINI_API_KEY.';
+      statusCode = 401;
+    } else if (error.message?.includes('quota')) {
+      errorMessage = 'API quota exceeded. Please try again later.';
+      statusCode = 429;
+    } else if (error.message) {
+      errorMessage = `Error: ${error.message}`;
+    }
+    
+    res.status(statusCode).json({ 
+      success: false, 
+      message: errorMessage,
+      ...(process.env.NODE_ENV === 'development' && { errorDetails: error.message })
+    });
   }
 };
 
@@ -111,6 +162,7 @@ exports.planGoal = async (req, res) => {
     // ✅ ULTRA SHORT PROMPT
     const prompt = `Create SMART goal for: "${goalIdea}". Format: Title, Metric, 3 Milestones, 2 Action Steps. Max 150 words.`;
 
+    const model = getModel();
     const result = await model.generateContent(prompt);
     const plan = result.response.text();
 
@@ -118,7 +170,31 @@ exports.planGoal = async (req, res) => {
 
   } catch (error) {
     console.error('AI Goal Planning Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to plan goal' });
+    console.error('Error Details:', error.message);
+    
+    let errorMessage = 'Failed to plan goal';
+    let statusCode = 500;
+    
+    if (error.message?.includes('API_KEY') || error.message?.includes('not configured')) {
+      errorMessage = 'AI service not configured. Please set GEMINI_API_KEY.';
+    } else if (error.message?.includes('leaked') || error.status === 403) {
+      errorMessage = '⚠️ API key has been reported as leaked. Please generate a new API key from Google AI Studio.';
+      statusCode = 403;
+    } else if (error.message?.includes('API key not valid')) {
+      errorMessage = 'Invalid API key. Please check your GEMINI_API_KEY.';
+      statusCode = 401;
+    } else if (error.message?.includes('quota')) {
+      errorMessage = 'API quota exceeded. Please try again later.';
+      statusCode = 429;
+    } else if (error.message) {
+      errorMessage = `Error: ${error.message}`;
+    }
+    
+    res.status(statusCode).json({ 
+      success: false, 
+      message: errorMessage,
+      ...(process.env.NODE_ENV === 'development' && { errorDetails: error.message })
+    });
   }
 };
 
@@ -146,6 +222,7 @@ exports.suggestHabits = async (req, res) => {
     // ✅ ULTRA SHORT PROMPT
     const prompt = `Suggest 3 habits for goals: ${goals.map(g => g.title).join(', ') || 'general improvement'}. Format: Habit + Why + How. Max 100 words.`;
 
+    const model = getModel();
     const result = await model.generateContent(prompt);
     const suggestions = result.response.text();
 
@@ -156,7 +233,31 @@ exports.suggestHabits = async (req, res) => {
 
   } catch (error) {
     console.error('AI Habit Suggestion Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to suggest habits' });
+    console.error('Error Details:', error.message);
+    
+    let errorMessage = 'Failed to suggest habits';
+    let statusCode = 500;
+    
+    if (error.message?.includes('API_KEY') || error.message?.includes('not configured')) {
+      errorMessage = 'AI service not configured. Please set GEMINI_API_KEY.';
+    } else if (error.message?.includes('leaked') || error.status === 403) {
+      errorMessage = '⚠️ API key has been reported as leaked. Please generate a new API key from Google AI Studio.';
+      statusCode = 403;
+    } else if (error.message?.includes('API key not valid')) {
+      errorMessage = 'Invalid API key. Please check your GEMINI_API_KEY.';
+      statusCode = 401;
+    } else if (error.message?.includes('quota')) {
+      errorMessage = 'API quota exceeded. Please try again later.';
+      statusCode = 429;
+    } else if (error.message) {
+      errorMessage = `Error: ${error.message}`;
+    }
+    
+    res.status(statusCode).json({ 
+      success: false, 
+      message: errorMessage,
+      ...(process.env.NODE_ENV === 'development' && { errorDetails: error.message })
+    });
   }
 };
 
@@ -172,6 +273,7 @@ exports.getMotivation = async (req, res) => {
     // ✅ ULTRA SHORT PROMPT
     const prompt = `Motivate ${user.name} (Level ${user.level}, ${user.streak} day streak). 80 words max. Be energizing!`;
 
+    const model = getModel();
     const result = await model.generateContent(prompt);
     const motivation = result.response.text();
 
@@ -182,7 +284,31 @@ exports.getMotivation = async (req, res) => {
 
   } catch (error) {
     console.error('AI Motivation Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to generate motivation' });
+    console.error('Error Details:', error.message);
+    
+    let errorMessage = 'Failed to generate motivation';
+    let statusCode = 500;
+    
+    if (error.message?.includes('API_KEY') || error.message?.includes('not configured')) {
+      errorMessage = 'AI service not configured. Please set GEMINI_API_KEY.';
+    } else if (error.message?.includes('leaked') || error.status === 403) {
+      errorMessage = '⚠️ API key has been reported as leaked. Please generate a new API key from Google AI Studio.';
+      statusCode = 403;
+    } else if (error.message?.includes('API key not valid')) {
+      errorMessage = 'Invalid API key. Please check your GEMINI_API_KEY.';
+      statusCode = 401;
+    } else if (error.message?.includes('quota')) {
+      errorMessage = 'API quota exceeded. Please try again later.';
+      statusCode = 429;
+    } else if (error.message) {
+      errorMessage = `Error: ${error.message}`;
+    }
+    
+    res.status(statusCode).json({ 
+      success: false, 
+      message: errorMessage,
+      ...(process.env.NODE_ENV === 'development' && { errorDetails: error.message })
+    });
   }
 };
 
@@ -224,6 +350,7 @@ ${lastMsg ? `Previous: ${lastMsg.substring(0, 50)}...` : ''}
 User: ${message}
 Reply in 100-150 words. Be warm, actionable, use emojis.`;
 
+    const model = getModel();
     const result = await model.generateContent(prompt);
     const response = result.response.text();
 
@@ -233,8 +360,58 @@ Reply in 100-150 words. Be warm, actionable, use emojis.`;
     });
 
   } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:320',message:'AI Chat Error caught',data:{errorName:error.name,errorMessage:error.message,status:error.status},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
     console.error('AI Chat Error:', error);
-    res.status(500).json({ success: false, message: 'Failed to process chat' });
+    console.error('Error Details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      status: error.status
+    });
+    
+    // Detailed error messages for debugging
+    let errorMessage = 'Failed to process chat';
+    let statusCode = 500;
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:335',message:'Checking error type',data:{hasAPIKey:error.message?.includes('API_KEY'),hasLeaked:error.message?.includes('leaked'),has403:error.status===403,errorMsg:error.message},timestamp:Date.now(),runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
+    if (error.message?.includes('API_KEY') || error.message?.includes('not configured')) {
+      errorMessage = 'AI service not configured. Please set GEMINI_API_KEY in environment variables.';
+    } else if (error.message?.includes('leaked') || error.status === 403) {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:342',message:'Leaked API key detected',data:{status:403},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      errorMessage = '⚠️ Your API key has been reported as leaked and is disabled. Please generate a new API key from Google AI Studio and update GEMINI_API_KEY in your .env file.';
+      statusCode = 403;
+    } else if (error.message?.includes('API key not valid') || error.message?.includes('Invalid API key')) {
+      errorMessage = 'Invalid API key. Please check your GEMINI_API_KEY in .env file.';
+      statusCode = 401;
+    } else if (error.message?.includes('quota') || error.message?.includes('Quota')) {
+      errorMessage = 'API quota exceeded. Please check your Google AI quota or try again later.';
+      statusCode = 429;
+    } else if (error.message?.includes('model')) {
+      errorMessage = `Model error: ${error.message}. Please check if the model name is correct.`;
+    } else if (error.message) {
+      errorMessage = `AI Error: ${error.message}`;
+    }
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:355',message:'Sending error response',data:{statusCode,errorMessage},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    res.status(statusCode).json({ 
+      success: false, 
+      message: errorMessage,
+      ...(process.env.NODE_ENV === 'development' && { 
+        errorDetails: error.message,
+        stack: error.stack 
+      })
+    });
   }
 };
 

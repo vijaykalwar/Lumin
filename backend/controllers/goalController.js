@@ -79,7 +79,7 @@ exports.createGoal = async (req, res) => {
 // ════════════════════════════════════════════════════════════
 exports.getGoals = async (req, res) => {
   try {
-    const { status, category } = req.query;
+    const { status, category, limit = 20, page = 1 } = req.query;
 
     // ========== BUILD FILTER ==========
     const filter = { user: req.user._id };
@@ -87,17 +87,29 @@ exports.getGoals = async (req, res) => {
     if (status) filter.status = status;
     if (category) filter.category = category;
 
-    // ========== GET GOALS ==========
+    // ========== PAGINATION ==========
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // ========== GET GOALS WITH PAGINATION ==========
     const goals = await Goal.find(filter)
       .sort({ createdAt: -1 })
-      .select('-__v');
+      .limit(parseInt(limit))
+      .skip(skip)
+      .select('-__v')
+      .lean();
 
-    // ========== STATISTICS ==========
+    const total = await Goal.countDocuments(filter);
+
+    // ========== STATISTICS (from all goals, not just paginated) ==========
+    const allGoals = await Goal.find({ user: req.user._id }).lean();
     const stats = {
-      total: goals.length,
-      active: goals.filter(g => g.status === 'active').length,
-      completed: goals.filter(g => g.status === 'completed').length,
-      overdue: goals.filter(g => g.isOverdue).length
+      total: allGoals.length,
+      active: allGoals.filter(g => g.status === 'active').length,
+      completed: allGoals.filter(g => g.status === 'completed').length,
+      overdue: allGoals.filter(g => {
+        if (g.status === 'completed') return false;
+        return new Date() > new Date(g.targetDate);
+      }).length
     };
 
     // ========== RESPONSE ==========
@@ -105,7 +117,15 @@ exports.getGoals = async (req, res) => {
       success: true,
       count: goals.length,
       stats,
-      data: goals
+      data: {
+        goals,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / parseInt(limit)),
+          totalGoals: total,
+          hasMore: skip + goals.length < total
+        }
+      }
     });
 
   } catch (error) {
@@ -125,7 +145,7 @@ exports.getGoals = async (req, res) => {
 // ════════════════════════════════════════════════════════════
 exports.getGoal = async (req, res) => {
   try {
-    const goal = await Goal.findById(req.params.id);
+    const goal = await Goal.findById(req.params.id).lean();
 
     // ========== CHECK EXISTS ==========
     if (!goal) {
@@ -376,36 +396,60 @@ exports.deleteGoal = async (req, res) => {
 // ════════════════════════════════════════════════════════════
 exports.getGoalStats = async (req, res) => {
   try {
-    const goals = await Goal.find({ user: req.user._id });
+    // ✅ OPTIMIZED: Use lean() and calculate stats in single pass
+    const goals = await Goal.find({ user: req.user._id }).lean();
 
-    // ========== CALCULATE STATS ==========
-    const stats = {
-      total: goals.length,
-      active: goals.filter(g => g.status === 'active').length,
-      completed: goals.filter(g => g.status === 'completed').length,
-      paused: goals.filter(g => g.status === 'paused').length,
-      abandoned: goals.filter(g => g.status === 'abandoned').length,
-      overdue: goals.filter(g => g.isOverdue).length,
-      
-      byCategory: {},
-      completionRate: goals.length > 0 
-        ? Math.round((goals.filter(g => g.status === 'completed').length / goals.length) * 100)
-        : 0,
-      
-      avgProgress: goals.length > 0
-        ? Math.round(goals.reduce((sum, g) => sum + g.progressPercentage, 0) / goals.length)
-        : 0
-    };
-
-    // ========== CATEGORY BREAKDOWN ==========
+    // ========== CALCULATE STATS IN SINGLE PASS ==========
+    const now = new Date();
+    let total = 0, active = 0, completed = 0, paused = 0, abandoned = 0, overdue = 0;
+    let totalProgress = 0;
+    const byCategory = {};
     const categories = ['career', 'health', 'learning', 'finance', 'relationships', 'hobbies', 'other'];
+    
+    // Initialize category counters
     categories.forEach(cat => {
-      const catGoals = goals.filter(g => g.category === cat);
-      stats.byCategory[cat] = {
-        total: catGoals.length,
-        completed: catGoals.filter(g => g.status === 'completed').length
-      };
+      byCategory[cat] = { total: 0, completed: 0 };
     });
+
+    // Single pass through goals
+    goals.forEach(goal => {
+      total++;
+      if (goal.status === 'active') active++;
+      else if (goal.status === 'completed') completed++;
+      else if (goal.status === 'paused') paused++;
+      else if (goal.status === 'abandoned') abandoned++;
+      
+      // Check overdue
+      if (goal.status !== 'completed' && new Date(goal.targetDate) < now) {
+        overdue++;
+      }
+      
+      // Calculate progress percentage
+      const progress = goal.targetValue > 0 
+        ? Math.min(Math.round((goal.currentValue / goal.targetValue) * 100), 100)
+        : 0;
+      totalProgress += progress;
+      
+      // Category stats
+      if (byCategory[goal.category]) {
+        byCategory[goal.category].total++;
+        if (goal.status === 'completed') {
+          byCategory[goal.category].completed++;
+        }
+      }
+    });
+
+    const stats = {
+      total,
+      active,
+      completed,
+      paused,
+      abandoned,
+      overdue,
+      byCategory,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+      avgProgress: total > 0 ? Math.round(totalProgress / total) : 0
+    };
 
     // ========== RESPONSE ==========
     res.status(200).json({

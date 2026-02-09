@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { validateGoal } = require('../middleware/validation');
 const {
   createGoal,
   getGoals,
@@ -21,7 +22,7 @@ router.get('/stats/overview', protect, getGoalStats);
 
 // Main CRUD routes
 router.route('/')
-  .post(protect, createGoal)
+  .post(protect, validateGoal, createGoal)
   .get(protect, getGoals);
 
 router.route('/:id')

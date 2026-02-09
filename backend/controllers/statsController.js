@@ -193,26 +193,12 @@ exports.getGoalConsistency = async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(days));
 
-    // ✅ OPTIMIZED: Parallel queries
-    const [goals, entries, allGoals, user, dailyEfforts] = await Promise.all([
+    // ✅ OPTIMIZED: Parallel queries - Combined duplicate aggregations
+    const [goals, allGoals, user, dailyEfforts] = await Promise.all([
       Goal.find({ user: userId, status: 'active' }).lean(),
-      Entry.aggregate([
-        {
-          $match: {
-            user: userId,
-            entryDate: { $gte: startDate }
-          }
-        },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$entryDate' } },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { '_id': 1 } }
-      ]),
       Goal.find({ user: userId }).lean(),
       User.findById(userId).select('streak').lean(),
+      // ✅ OPTIMIZED: Single aggregation instead of two separate ones
       Entry.aggregate([
         {
           $match: {
@@ -223,6 +209,7 @@ exports.getGoalConsistency = async (req, res) => {
         {
           $group: {
             _id: { $dateToString: { format: '%Y-%m-%d', date: '$entryDate' } },
+            count: { $sum: 1 },
             entries: { $sum: 1 },
             totalWords: { $sum: '$wordCount' },
             totalXP: { $sum: '$xpAwarded' }
@@ -231,6 +218,9 @@ exports.getGoalConsistency = async (req, res) => {
         { $sort: { '_id': 1 } }
       ])
     ]);
+    
+    // Extract entries count from combined aggregation
+    const entries = dailyEfforts.map(e => ({ _id: e._id, count: e.count }));
 
     // Calculate metrics
     const totalDays = parseInt(days);

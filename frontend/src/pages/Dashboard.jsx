@@ -10,8 +10,8 @@ import React, { Suspense } from 'react';
 
 const DailyChallenges = React.lazy(() => import('../components/DailyChallenges'));
 
-// ✨ Animated Counter
-const AnimatedCounter = ({ value, duration = 1000 }) => {
+// ✨ Animated Counter - Memoized for performance
+const AnimatedCounter = React.memo(({ value, duration = 1000 }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     const numValue = parseInt(value) || 0;
@@ -26,11 +26,17 @@ const AnimatedCounter = ({ value, duration = 1000 }) => {
     return () => clearInterval(timer);
   }, [value, duration]);
   return <span>{count.toLocaleString()}</span>;
-};
+});
 
-// 📅 Heatmap
-const StreakHeatmap = ({ weeklyActivity = [] }) => {
-  const getColor = (e) => e === 0 ? 'bg-gray-100 dark:bg-gray-800' : e <= 1 ? 'bg-purple-200 dark:bg-purple-900' : e <= 2 ? 'bg-purple-400 dark:bg-purple-700' : 'bg-purple-600 dark:bg-purple-500';
+// 📅 Heatmap - Memoized for performance
+const StreakHeatmap = React.memo(({ weeklyActivity = [] }) => {
+  const getColor = React.useCallback((e) => {
+    if (e === 0) return 'bg-gray-100 dark:bg-gray-800';
+    if (e <= 1) return 'bg-purple-200 dark:bg-purple-900';
+    if (e <= 2) return 'bg-purple-400 dark:bg-purple-700';
+    return 'bg-purple-600 dark:bg-purple-500';
+  }, []);
+  
   const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   return (
     <div className="grid grid-cols-7 gap-1">
@@ -42,7 +48,7 @@ const StreakHeatmap = ({ weeklyActivity = [] }) => {
       ))}
     </div>
   );
-};
+});
 
 function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -82,12 +88,12 @@ function Dashboard() {
     setLoading(false);
   };
 
-  const handleMoodSelect = async (mood) => {
+  const handleMoodSelect = React.useCallback(async (mood) => {
     setSelectedMood(mood);
     showToast.success(`Mood: ${mood}`);
     const result = await aiAPI.getMotivation({ situation: `feeling ${mood}` });
     if (result.success) setAiAdvice(result.data.motivation);
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -113,10 +119,10 @@ function Dashboard() {
     { emoji: '😊', label: 'HAPPY', color: 'from-yellow-400 to-orange-400' },
     { emoji: '😌', label: 'CALM', color: 'from-blue-400 to-cyan-400' },
     { emoji: '🤔', label: 'THOUGHTFUL', color: 'from-purple-400 to-pink-400' },
-    { emoji: '�', label: 'FRUSTRATED', color: 'from-red-400 to-orange-400' },
+    { emoji: '😤', label: 'FRUSTRATED', color: 'from-red-400 to-orange-400' },
     { emoji: '😢', label: 'SAD', color: 'from-gray-400 to-blue-400' },
     { emoji: '😴', label: 'TIRED', color: 'from-indigo-400 to-purple-400' },
-    { emoji: '�', label: 'MOTIVATED', color: 'from-green-400 to-emerald-400' },
+    { emoji: '💪', label: 'MOTIVATED', color: 'from-green-400 to-emerald-400' },
     { emoji: '😰', label: 'ANXIOUS', color: 'from-pink-400 to-rose-400' }
   ];
 
