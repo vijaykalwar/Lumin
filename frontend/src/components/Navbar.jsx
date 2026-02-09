@@ -56,7 +56,7 @@ export default function Navbar() {
   const navTabs = [
     { to: '/dashboard', icon: Home, label: 'Dashboard' },
     { to: '/goals', icon: Target, label: 'Goals' },
-    { to: '/entries', icon: Heart, label: 'Habits' },
+    { to: '/entries', icon: Heart, label: 'Journal' },
     { to: '/analytics', icon: Eye, label: 'Vision' },
     { to: '/community', icon: Users, label: 'Social' },
     { to: '/pomodoro', icon: Clock, label: 'Focus' }
