@@ -190,7 +190,7 @@ function Analytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-950">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-pulse">
           <div className="h-12 w-64 bg-gray-300 dark:bg-gray-700 rounded-xl" />
@@ -207,7 +207,7 @@ function Analytics() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -305,14 +305,14 @@ function Analytics() {
         {consistencyData && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fadeIn">
             {[
-              { label: 'Consistency', value: consistencyData.consistencyScore, suffix: '%', icon: Flame, color: 'orange' },
-              { label: 'Goals Met', value: consistencyData.goals.completed, icon: Target, color: 'blue' },
-              { label: 'Current Streak', value: consistencyData.currentStreak, icon: Calendar, color: 'green' },
-              { label: 'Avg XP/Day', value: consistencyData.averages.xp, icon: Award, color: 'purple' },
+              { label: 'Consistency', value: consistencyData.consistencyScore, suffix: '%', icon: Flame, borderClass: 'border-orange-200 dark:border-orange-800/50', bgClass: 'bg-orange-100 dark:bg-orange-900/30', iconClass: 'text-orange-500' },
+              { label: 'Goals Met', value: consistencyData.goals.completed, icon: Target, borderClass: 'border-blue-200 dark:border-blue-800/50', bgClass: 'bg-blue-100 dark:bg-blue-900/30', iconClass: 'text-blue-500' },
+              { label: 'Current Streak', value: consistencyData.currentStreak, icon: Calendar, borderClass: 'border-green-200 dark:border-green-800/50', bgClass: 'bg-green-100 dark:bg-green-900/30', iconClass: 'text-green-500' },
+              { label: 'Avg XP/Day', value: consistencyData.averages.xp, icon: Award, borderClass: 'border-purple-200 dark:border-purple-800/50', bgClass: 'bg-purple-100 dark:bg-purple-900/30', iconClass: 'text-purple-500' },
             ].map((stat, i) => (
-              <div key={i} className={`bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 border-${stat.color}-200 dark:border-${stat.color}-800/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group`}>
-                <div className={`mb-3 p-2 w-fit rounded-xl bg-${stat.color}-100 dark:bg-${stat.color}-900/30`}>
-                  <stat.icon className={`w-5 h-5 text-${stat.color}-500`} />
+              <div key={i} className={`bg-white dark:bg-gray-800 rounded-2xl p-4 border-2 ${stat.borderClass} shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group`}>
+                <div className={`mb-3 p-2 w-fit rounded-xl ${stat.bgClass}`}>
+                  <stat.icon className={`w-5 h-5 ${stat.iconClass}`} />
                 </div>
                 <div className="text-3xl font-black text-gray-800 dark:text-white">
                   <AnimatedCounter value={stat.value} suffix={stat.suffix || ''} />

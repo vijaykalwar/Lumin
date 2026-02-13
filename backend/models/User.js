@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: 6
+    minlength: 8
   },
   
   // ========== GAMIFICATION FIELDS ==========
@@ -31,6 +31,21 @@ const userSchema = new mongoose.Schema({
     min: 1
   },
   streak: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  bestStreak: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  totalSessions: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  totalHours: {
     type: Number,
     default: 0,
     min: 0
@@ -71,6 +86,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     maxlength: 100,
     default: ''
+  },
+
+  // ========== PASSWORD RESET FIELDS ==========
+  resetPasswordToken: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null
+  },
+
+  // ========== REFRESH TOKEN (for token refresh) ==========
+  refreshToken: {
+    type: String,
+    default: null,
+    select: false
   },
   
   // ========== SETTINGS ==========

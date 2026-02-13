@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
 
       if (data.success) {
         localStorage.setItem('token', data.token);
+        if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
         return { success: true };
@@ -46,9 +47,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login function - receives token and user from Login.jsx
-  const login = (token, userData) => {
+  // Login function - receives token, user, and optional refreshToken from Login.jsx
+  const login = (token, userData, refreshToken = null) => {
     localStorage.setItem('token', token);
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   };
@@ -56,6 +58,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
   };

@@ -349,6 +349,113 @@ const getEmailTemplate = (type, data) => {
           </div>
         </body>
       </html>
+    `,
+
+    // Password Reset
+    passwordReset: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); padding: 40px 20px; text-align: center; color: white; }
+            .content { padding: 40px 30px; }
+            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+            .warning { padding: 15px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 8px; margin: 20px 0; color: #991b1b; }
+            .footer { background: #f9fafb; padding: 20px; text-align: center; color: #999; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Password Reset Request</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${data.name}! 👋</h2>
+              <p>We received a request to reset your LUMIN password. If you made this request, click the button below to reset your password:</p>
+              
+              <div style="text-align: center;">
+                <a href="${data.resetUrl}" class="button">Reset Password</a>
+              </div>
+              
+              <div class="warning">
+                <strong>⚠️ Important:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                  <li>This link expires in ${data.expiresIn}</li>
+                  <li>If you didn't request this, ignore this email</li>
+                  <li>Never share this link with anyone</li>
+                </ul>
+              </div>
+
+              <p style="font-size: 14px; color: #666; margin-top: 30px;">
+                If the button doesn't work, copy and paste this link into your browser:
+              </p>
+              <p style="font-size: 12px; color: #999; word-break: break-all;">
+                ${data.resetUrl}
+              </p>
+            </div>
+            <div class="footer">
+              <p>If you didn't request a password reset, you can safely ignore this email.</p>
+              <p>© 2025 LUMIN. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+
+    // Password Changed Confirmation
+    passwordChanged: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; text-align: center; color: white; }
+            .content { padding: 40px 30px; }
+            .success-box { padding: 20px; background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; margin: 20px 0; color: #065f46; text-align: center; }
+            .button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+            .footer { background: #f9fafb; padding: 20px; text-align: center; color: #999; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div style="font-size: 64px; margin-bottom: 10px;">✅</div>
+              <h1>Password Changed Successfully</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${data.name}! 👋</h2>
+              <div class="success-box">
+                <p style="margin: 0; font-size: 18px; font-weight: bold;">🎉 Your password has been updated!</p>
+              </div>
+              
+              <p>Your LUMIN password was successfully changed. You can now log in with your new password.</p>
+              
+              <p><strong>What to do next:</strong></p>
+              <ul style="color: #666; line-height: 1.8;">
+                <li>✅ Use your new password to log in</li>
+                <li>✅ Update password on any saved devices</li>
+                <li>✅ Keep your password secure</li>
+              </ul>
+
+              <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL}/login" class="button">Log In Now</a>
+              </div>
+
+              <div style="padding: 15px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 8px; margin-top: 30px; color: #991b1b;">
+                <strong>⚠️ Didn't change your password?</strong>
+                <p style="margin: 10px 0 0 0;">If you didn't make this change, contact support immediately. Your account may be compromised.</p>
+              </div>
+            </div>
+            <div class="footer">
+              <p>Your security is our priority! 🔒</p>
+              <p>© 2025 LUMIN. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
     `
 
   };

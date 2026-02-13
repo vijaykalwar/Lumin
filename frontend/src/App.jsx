@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 import { Loader2 } from 'lucide-react';
 
 // ════════════════════════════════════════════════════════════
@@ -14,6 +15,10 @@ import { Loader2 } from 'lucide-react';
 import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
+
+// Password Reset Pages
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 // Lazy loaded pages (loaded on demand)
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -30,6 +35,7 @@ const CommunityFeed = lazy(() => import('./pages/CommunityFeed'));
 const Teams = lazy(() => import('./pages/Teams'));
 const TeamDetail = lazy(() => import('./pages/TeamDetail'));
 const Profile = lazy(() => import('./pages/Profile'));
+const ExportData = lazy(() => import('./pages/ExportData'));
 
 // ✅ Components
 const InstallPWA = lazy(() => import('./components/InstallPWA'));
@@ -40,7 +46,7 @@ const InstallPWA = lazy(() => import('./components/InstallPWA'));
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+    <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
       <div className="text-center">
         <Loader2 className="w-12 h-12 text-primary-500 animate-spin mx-auto mb-4" />
         <p className="text-gray-400">Loading...</p>
@@ -125,68 +131,73 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
                 
-                {/* Protected Routes */}
+                {/* Protected Routes - Each wrapped with RouteErrorBoundary for isolation */}
                 <Route 
                   path="/dashboard" 
-                  element={<ProtectedRoute><Dashboard /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><Dashboard /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/add-entry" 
-                  element={<ProtectedRoute><AddEntry /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><AddEntry /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/entries" 
-                  element={<ProtectedRoute><Entries /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><Entries /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/goals" 
-                  element={<ProtectedRoute><Goals /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><Goals /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/analytics" 
-                  element={<ProtectedRoute><Analytics /></ProtectedRoute>} 
-                />
-                <Route 
-                  path="/add-goal" 
-                  element={<ProtectedRoute><CreateGoal /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><Analytics /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/create-goal" 
-                  element={<ProtectedRoute><CreateGoal /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><CreateGoal /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/goals/:id" 
-                  element={<ProtectedRoute><GoalDetail /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><GoalDetail /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/challenges" 
-                  element={<ProtectedRoute><Challenges /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><Challenges /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/ai-chat" 
-                  element={<ProtectedRoute><AIChat /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><AIChat /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/pomodoro" 
-                  element={<ProtectedRoute><PomodoroTimer /></ProtectedRoute>} 
-                />    
+                  element={<ProtectedRoute><RouteErrorBoundary><PomodoroTimer /></RouteErrorBoundary></ProtectedRoute>} 
+                />
                 <Route 
                   path="/community" 
-                  element={<ProtectedRoute><CommunityFeed /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><CommunityFeed /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/teams" 
-                  element={<ProtectedRoute><Teams /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><Teams /></RouteErrorBoundary></ProtectedRoute>} 
                 />
                 <Route 
                   path="/teams/:id" 
-                  element={<ProtectedRoute><TeamDetail /></ProtectedRoute>} 
+                  element={<ProtectedRoute><RouteErrorBoundary><TeamDetail /></RouteErrorBoundary></ProtectedRoute>} 
                 />
-                <Route
-                  path="/profile"
-                  element={<ProtectedRoute><Profile /></ProtectedRoute>}
+                <Route 
+                  path="/profile" 
+                  element={<ProtectedRoute><RouteErrorBoundary><Profile /></RouteErrorBoundary></ProtectedRoute>} 
                 />
+                <Route 
+                  path="/export-data" 
+                  element={<ProtectedRoute><RouteErrorBoundary><ExportData /></RouteErrorBoundary></ProtectedRoute>} 
+                />
+                
+                {/* Catch All */}
+                <Route path="*" element={<Navigate to="/" />} />
               </Routes>
 
               {/* PWA Install Prompt */}

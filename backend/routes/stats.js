@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
+const { cacheMiddleware } = require('../utils/cache');
 const {
   getDashboardStats,
   getMoodTrends,
@@ -9,11 +10,11 @@ const {
   getGoalTimeline
 } = require('../controllers/statsController');
 
-// Add these routes
-router.get('/goal-consistency', protect, getGoalConsistency);
-router.get('/goal-timeline', protect, getGoalTimeline);
-router.get('/dashboard', protect, getDashboardStats);
-router.get('/mood-trends', protect, getMoodTrends);
-router.get('/weekly-activity', protect, getWeeklyActivity);
+// Dashboard & stats with 5-min cache for fast loads
+router.get('/dashboard', protect, cacheMiddleware(300), getDashboardStats);
+router.get('/weekly-activity', protect, cacheMiddleware(300), getWeeklyActivity);
+router.get('/mood-trends', protect, cacheMiddleware(600), getMoodTrends);
+router.get('/goal-consistency', protect, cacheMiddleware(600), getGoalConsistency);
+router.get('/goal-timeline', protect, cacheMiddleware(600), getGoalTimeline);
 
 module.exports = router;

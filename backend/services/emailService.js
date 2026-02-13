@@ -120,6 +120,38 @@ class EmailService {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 🔐 PASSWORD RESET
+  // ═══════════════════════════════════════════════════════════
+  async sendPasswordResetEmail(user, resetUrl) {
+    const html = getEmailTemplate('passwordReset', {
+      name: user.name,
+      resetUrl,
+      expiresIn: '1 hour'
+    });
+
+    return await this.sendEmail(
+      user.email,
+      '🔐 Reset Your LUMIN Password',
+      html
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ✅ PASSWORD CHANGED CONFIRMATION
+  // ═══════════════════════════════════════════════════════════
+  async sendPasswordChangedEmail(user) {
+    const html = getEmailTemplate('passwordChanged', {
+      name: user.name
+    });
+
+    return await this.sendEmail(
+      user.email,
+      '✅ Your LUMIN Password Was Changed',
+      html
+    );
+  }
+
 }
 
 module.exports = new EmailService();

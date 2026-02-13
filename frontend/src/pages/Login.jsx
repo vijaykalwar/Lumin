@@ -40,7 +40,7 @@ function Login() {
       const result = await authAPI.login(email, password);
       
       if (result.success) {
-        login(result.token, result.user);
+        login(result.token, result.user, result.refreshToken);
         showToast.success(`Welcome back, ${result.user.name}! 👋`);
         navigate('/dashboard');
       } else {
@@ -54,7 +54,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full animate-fadeIn">
         
         {/* Header */}
@@ -108,9 +108,9 @@ function Login() {
                 <input type="checkbox" className="rounded" />
                 <span>Remember me</span>
               </label>
-              <a href="#" className="text-primary-400 hover:text-primary-300 transition">
+              <Link to="/forgot-password" className="text-primary-400 hover:text-primary-300 transition">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <button 

@@ -8,21 +8,32 @@ const emailService = require('../services/emailService');
 // ============================================
 
 // Constants
-const JWT_EXPIRES_IN = '30d';
+const JWT_EXPIRES_IN = '7d'; // Access token - shorter for security
+const REFRESH_EXPIRES_IN = '30d';
 const SALT_ROUNDS = 12;
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_PASSWORD_LENGTH = 8;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
 
-// Generate JWT token
+// Generate access JWT token
 const generateToken = (userId) => {
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret && process.env.NODE_ENV === 'production') {
     throw new Error('JWT_SECRET is required in production');
   }
-  
   return jwt.sign(
-    { id: userId },
+    { id: userId, type: 'access' },
     jwtSecret || 'lumin-secret-key',
     { expiresIn: JWT_EXPIRES_IN }
+  );
+};
+
+// Generate refresh token
+const generateRefreshToken = (userId) => {
+  const jwtSecret = process.env.JWT_SECRET;
+  return jwt.sign(
+    { id: userId, type: 'refresh' },
+    jwtSecret || 'lumin-secret-key',
+    { expiresIn: REFRESH_EXPIRES_IN }
   );
 };
 
@@ -69,6 +80,12 @@ exports.register = async (req, res) => {
         message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
       });
     }
+    if (!PASSWORD_REGEX.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      });
+    }
 
     // ✅ Check if user already exists
     const existingUser = await User.findOne({ email: normalizedEmail });
@@ -90,8 +107,10 @@ exports.register = async (req, res) => {
       password: hashedPassword
     });
 
-    // ✅ Generate token
+    // ✅ Generate tokens
     const token = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    await User.findByIdAndUpdate(user._id, { refreshToken });
 
     // ✅ Send welcome email (non-blocking)
     if (emailService && emailService.sendWelcomeEmail) {
@@ -107,6 +126,7 @@ exports.register = async (req, res) => {
       success: true,
       message: 'Account created successfully!',
       token,
+      refreshToken,
       user: formatUserResponse(user)
     });
 
@@ -167,11 +187,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    // ✅ Generate token
+    // ✅ Generate tokens
     const token = generateToken(user._id);
-
-    // ✅ Update last login (optional - non-blocking)
-    User.findByIdAndUpdate(user._id, { lastLogin: new Date() }).catch(() => {});
+    const refreshToken = generateRefreshToken(user._id);
+    await User.findByIdAndUpdate(user._id, { refreshToken, lastLogin: new Date() }).catch(() => {});
 
     // ✅ Log successful login
     console.log(`[AUTH] User logged in: ${user.email}`);
@@ -180,6 +199,7 @@ exports.login = async (req, res) => {
       success: true,
       message: 'Login successful!',
       token,
+      refreshToken,
       user: formatUserResponse(user)
     });
 
@@ -217,6 +237,59 @@ exports.getMe = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch user profile'
+    });
+  }
+};
+
+// ============================================
+// 🔄 REFRESH TOKEN - Get new access token
+// ============================================
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken: token } = req.body;
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token required'
+      });
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+    const decoded = jwt.verify(token, jwtSecret || 'lumin-secret-key');
+    if (decoded.type !== 'refresh') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token type'
+      });
+    }
+
+    const user = await User.findById(decoded.id).select('+refreshToken');
+    if (!user || user.refreshToken !== token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired refresh token'
+      });
+    }
+
+    const newAccessToken = generateToken(user._id);
+    const newRefreshToken = generateRefreshToken(user._id);
+    await User.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken });
+
+    res.json({
+      success: true,
+      token: newAccessToken,
+      refreshToken: newRefreshToken
+    });
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token expired. Please login again.'
+      });
+    }
+    res.status(401).json({
+      success: false,
+      message: 'Invalid refresh token'
     });
   }
 };

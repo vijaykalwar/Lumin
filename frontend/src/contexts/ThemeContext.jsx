@@ -13,12 +13,21 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
-    return saved || 'dark';
+    // Default to light theme for a simpler look
+    return saved || 'light';
   });
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
+    // Apply theme to <html> element so Tailwind's `dark:` classes work
+    const root = document.documentElement;
+    root.setAttribute('data-theme', theme);
+
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
   }, [theme]);
 
   const toggleTheme = () => {

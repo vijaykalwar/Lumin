@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Tag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { entryAPI } from '../utils/api';
+import { sanitizeInput } from '../utils/sanitize';
 import Navbar from '../components/Navbar';
 import { showToast } from '../utils/toast';
 function AddEntry() {
@@ -72,18 +73,24 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   
   if (!formData.mood || !formData.notes.trim()) {
-    showToast.error('Please select a mood and write some notes!'); // 🆕 CHANGED
+    showToast.error('Please select a mood and write some notes!');
     return;
   }
 
-  const toastId = showToast.loading('Creating your entry...'); // 🆕 CHANGED
+  const toastId = showToast.loading('Creating your entry...');
 
   try {
-    const result = await entryAPI.create(formData);
+    const payload = {
+      ...formData,
+      title: sanitizeInput(formData.title || ''),
+      notes: sanitizeInput(formData.notes),
+      tags: Array.isArray(formData.tags) ? formData.tags.map(sanitizeInput) : (formData.tags || '').split(',').map((t) => sanitizeInput(t.trim())).filter(Boolean),
+    };
+    const result = await entryAPI.create(payload);
     
     if (result.success) {
       showToast.dismiss(toastId);
-      showToast.success(`🎉 Entry created! +${result.data.rewards.xp.total} XP earned!`); // 🆕 CHANGED
+      showToast.success(`Entry created successfully! +${result.data.rewards.xp.total} XP`);
       
       // Reset form
       setFormData({
@@ -95,21 +102,21 @@ const handleSubmit = async (e) => {
         category: 'personal'
       });
       
-      // Navigate after delay
-      setTimeout(() => navigate('/entries'), 1500);
+      // Navigate back to home/dashboard after a short delay
+      setTimeout(() => navigate('/dashboard'), 1200);
     } else {
       showToast.dismiss(toastId);
-      showToast.error(result.message || 'Failed to create entry'); // 🆕 CHANGED
+      showToast.error(result.message || 'Failed to create entry');
     }
   } catch (error) {
     showToast.dismiss(toastId);
-    showToast.error('Something went wrong. Please try again.'); // 🆕 CHANGED
+    showToast.error('Something went wrong. Please try again.');
   }
 };
 
   if (hasEntryToday) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-white dark:bg-gray-950">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="card max-w-2xl mx-auto text-center">
@@ -133,17 +140,27 @@ const handleSubmit = async (e) => {
   }
 
  return (
-  <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 p-4 sm:p-6 lg:p-8">
+  <div className="min-h-screen bg-white dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
     <div className="max-w-4xl mx-auto">
       
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-2">
-          Create New Entry
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          Capture your thoughts and feelings
-        </p>
+      <div className="mb-6 sm:mb-8 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+        <div className="text-right flex-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-1">
+            Create New Entry
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            Capture your thoughts and feelings
+          </p>
+        </div>
       </div>
 
       {/* Form */}
@@ -208,8 +225,8 @@ const handleSubmit = async (e) => {
             />
           </div>
           <p className="text-xs text-gray-500 mt-1 text-right">
-  {wordCount} words (min 10 required)
-</p>
+            {wordCount} words (min 10 required)
+          </p>
 
 
           {/* Submit Button - Full width on mobile */}

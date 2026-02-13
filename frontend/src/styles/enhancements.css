@@ -1,0 +1,402 @@
+/* ═══════════════════════════════════════════════════════════
+   📱 MOBILE-FIRST RESPONSIVE ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  /* Minimum 44x44px touch targets */
+  button,
+  .btn,
+  a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Larger tap area for interactive elements */
+  .goal-card-action,
+  .quick-add-btn {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+  }
+
+  /* Stack cards vertically with proper spacing */
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Improve readability on small screens */
+  .card-glass {
+    padding: 16px !important;
+  }
+
+  /* Make modals full-screen on mobile */
+  .modal-content {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  /* Bottom sheet style for mobile dialogs */
+  .mobile-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 80vh;
+    border-radius: 20px 20px 0 0;
+    overflow-y: auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ✨ FAB (Floating Action Button) Animations
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes fab-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+  }
+}
+
+.fab-pulse {
+  animation: fab-pulse 2s ease-in-out infinite;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🏆 BADGE UNLOCK ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes badge-unlock {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+.badge-unlock {
+  animation: badge-unlock 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes badge-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(251, 191, 36, 0.8),
+      0 0 30px rgba(251, 191, 36, 0.4);
+  }
+}
+
+.badge-glow {
+  animation: badge-glow 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🎨 SMOOTH PAGE TRANSITIONS
+   ═══════════════════════════════════════════════════════════ */
+
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
+}
+
+.page-exit {
+  opacity: 1;
+}
+
+.page-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ⚡ PERFORMANCE OPTIMIZATIONS
+   ═══════════════════════════════════════════════════════════ */
+
+/* GPU acceleration for animations */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+/* Reduce animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .fab-pulse,
+  .badge-unlock,
+  .bounce-subtle {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📊 SMART INSIGHTS WIDGET POLISH
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.insight-card {
+  animation: slide-up 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.insight-card:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.insight-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.insight-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🎯 ENHANCED GOAL CARD INTERACTIONS
+   ═══════════════════════════════════════════════════════════ */
+
+.goal-card {
+  transition: all 0.2s ease;
+}
+
+.goal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.goal-card:active {
+  transform: translateY(0);
+}
+
+/* Progress bar animation */
+@keyframes fill-progress {
+  from {
+    width: 0;
+  }
+}
+
+.progress-bar-fill {
+  animation: fill-progress 0.8s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   💡 SKELETON LOADERS FOR BETTER PERCEIVED PERFORMANCE
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(229, 231, 235, 1) 0%,
+    rgba(243, 244, 246, 1) 50%,
+    rgba(229, 231, 235, 1) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(55, 65, 81, 1) 0%,
+    rgba(75, 85, 99, 1) 50%,
+    rgba(55, 65, 81, 1) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🔔 NOTIFICATION TOAST ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.toast-enter {
+  animation: toast-slide-in 0.3s ease-out;
+}
+
+.toast-exit {
+  animation: toast-slide-out 0.2s ease-in;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🌊 RIPPLE EFFECT FOR BUTTONS
+   ═══════════════════════════════════════════════════════════ */
+
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+.ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📱 SWIPE GESTURES (Visual Feedback)
+   ═══════════════════════════════════════════════════════════ */
+
+.swipeable {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipe-delete {
+  background: linear-gradient(to left, #ef4444 0%, transparent 100%);
+  transition: background 0.3s ease;
+}
+
+.swipe-complete {
+  background: linear-gradient(to right, #10b981 0%, transparent 100%);
+  transition: background 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🎭 FOCUS VISIBLE FOR ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════ */
+
+*:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #a855f7;
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ⚙️ UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════ */
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

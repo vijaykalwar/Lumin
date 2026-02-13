@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const compression = require("compression");
 const connectDB = require("./config/db");
+const logger = require("./utils/logger");
 
 const { setupDailyReminders, setupWeeklySummary } = require("./utils/cronJobs");
 
@@ -103,15 +104,42 @@ const authLimiter = rateLimit({
 
 // ✅ Rate limiting - AI routes (stricter - expensive operations)
 const aiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // 20 AI requests per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  max: 20,
   message: "Too many AI requests. Please wait before making more requests.",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
+// ✅ Rate limiting - Profile, Stats, Export
+const profileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: "Too many profile requests. Please try again later.",
+  standardHeaders: true,
+});
+const statsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: "Too many stats requests. Please try again later.",
+  standardHeaders: true,
+});
+const exportLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: "Too many export requests. Please try again later.",
+  standardHeaders: true,
+});
+
 // Apply general rate limiter to all requests
 app.use("/api/", generalLimiter);
+
+// Request timeout (30s)
+app.use((req, res, next) => {
+  req.setTimeout(30000);
+  res.setTimeout(30000);
+  next();
+});
 
 // Request logging (development only)
 if (process.env.NODE_ENV !== "production") {
@@ -135,15 +163,16 @@ app.use("/api/auth", require("./routes/auth"));
 // AI routes (with rate limiting)
 app.use("/api/ai", aiLimiter, require("./routes/ai"));
 
-// Application routes
+// Application routes (with rate limiters)
 app.use("/api/entries", require("./routes/entries"));
-app.use("/api/stats", require("./routes/stats"));
+app.use("/api/stats", statsLimiter, require("./routes/stats"));
 app.use("/api/goals", require("./routes/goals"));
 app.use("/api/pomodoro", require("./routes/pomodoro"));
 app.use("/api/posts", require("./routes/posts"));
 app.use("/api/teams", require("./routes/teams"));
-app.use("/api/profile", require("./routes/profile"));
+app.use("/api/profile", profileLimiter, require("./routes/profile"));
 app.use("/api/challenges", require("./routes/challenges"));
+app.use("/api/export", exportLimiter, require("./routes/export"));
 
 // Health check
 app.get("/", (req, res) => {
@@ -163,20 +192,23 @@ app.use((req, res) => {
   });
 });
 
-// ✅ Global error handler
+// ✅ Global error handler (with logging)
 app.use((err, req, res, next) => {
-  console.error("Error:", err.message);
+  logger.error(err.message, {
+    stack: err.stack,
+    url: req?.url,
+    method: req?.method,
+    statusCode: err.status || err.statusCode || 500,
+  });
 
-  // Standardized error response
   const statusCode = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
-  
+
   const response = {
     success: false,
-    message
+    message,
   };
 
-  // Only include stack trace in development
   if (process.env.NODE_ENV === "development") {
     response.error = err.message;
     response.stack = err.stack;
@@ -201,11 +233,11 @@ app.listen(PORT, () => {
 
 // Error handlers
 process.on("unhandledRejection", (err) => {
-  console.log("❌ Unhandled Rejection:", err.message);
+  logger.error("Unhandled Rejection", { message: err?.message, stack: err?.stack });
   process.exit(1);
 });
 
 process.on("uncaughtException", (err) => {
-  console.log("❌ Uncaught Exception:", err.message);
+  logger.error("Uncaught Exception", { message: err?.message, stack: err?.stack });
   process.exit(1);
 });

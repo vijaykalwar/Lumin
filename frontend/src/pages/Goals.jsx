@@ -80,7 +80,7 @@ const handleDeleteGoal = async (goalId) => {
 
   if (loading && goals.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen bg-white dark:bg-gray-950">
         <Navbar />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-center">
@@ -93,7 +93,7 @@ const handleDeleteGoal = async (goalId) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -191,7 +191,7 @@ const handleDeleteGoal = async (goalId) => {
 
                   {/* Category Badge */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full bg-${categoryConfig.color}-500/20 text-${categoryConfig.color}-400`}>
+                    <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${categoryColorMap[categoryConfig.color] || categoryColorMap.gray}`}>
                       <span>{categoryConfig.icon}</span>
                       <span className="text-sm font-semibold">{categoryConfig.label}</span>
                     </div>

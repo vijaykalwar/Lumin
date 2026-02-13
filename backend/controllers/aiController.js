@@ -360,10 +360,6 @@ Reply in 100-150 words. Be warm, actionable, use emojis.`;
     });
 
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:320',message:'AI Chat Error caught',data:{errorName:error.name,errorMessage:error.message,status:error.status},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     console.error('AI Chat Error:', error);
     console.error('Error Details:', {
       message: error.message,
@@ -376,16 +372,9 @@ Reply in 100-150 words. Be warm, actionable, use emojis.`;
     let errorMessage = 'Failed to process chat';
     let statusCode = 500;
     
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:335',message:'Checking error type',data:{hasAPIKey:error.message?.includes('API_KEY'),hasLeaked:error.message?.includes('leaked'),has403:error.status===403,errorMsg:error.message},timestamp:Date.now(),runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
-    
     if (error.message?.includes('API_KEY') || error.message?.includes('not configured')) {
       errorMessage = 'AI service not configured. Please set GEMINI_API_KEY in environment variables.';
     } else if (error.message?.includes('leaked') || error.status === 403) {
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:342',message:'Leaked API key detected',data:{status:403},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       errorMessage = '⚠️ Your API key has been reported as leaked and is disabled. Please generate a new API key from Google AI Studio and update GEMINI_API_KEY in your .env file.';
       statusCode = 403;
     } else if (error.message?.includes('API key not valid') || error.message?.includes('Invalid API key')) {
@@ -399,10 +388,6 @@ Reply in 100-150 words. Be warm, actionable, use emojis.`;
     } else if (error.message) {
       errorMessage = `AI Error: ${error.message}`;
     }
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/21590d46-a1d4-43ee-8203-493d03507207',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiController.js:355',message:'Sending error response',data:{statusCode,errorMessage},timestamp:Date.now(),runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     
     res.status(statusCode).json({ 
       success: false, 

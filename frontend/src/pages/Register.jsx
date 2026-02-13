@@ -46,7 +46,7 @@ function Register() {
       const result = await authAPI.register(name, email, password);
       
       if (result.success) {
-        login(result.token, result.user);
+        login(result.token, result.user, result.refreshToken);
         showToast.success('🎉 Welcome to LUMIN! Let\'s start your journey!');
         navigate('/dashboard');
       } else {
@@ -60,7 +60,7 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full animate-fadeIn">
         
         {/* Header */}

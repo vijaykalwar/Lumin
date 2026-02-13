@@ -82,6 +82,11 @@ exports.updateStreak = async (userId) => {
         // Consecutive day
         user.streak += 1;
         
+        // ✨ Update best streak if current streak is higher
+        if (user.streak > (user.bestStreak || 0)) {
+          user.bestStreak = user.streak;
+        }
+        
         // 🆕 Check for milestone (7, 14, 30, 50, 100 days)
         const milestones = [7, 14, 30, 50, 100];
         if (milestones.includes(user.streak)) {

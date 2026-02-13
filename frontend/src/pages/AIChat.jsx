@@ -241,7 +241,7 @@ export default function AIChat() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <Navbar />
       
       <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 pb-24 safe-bottom">

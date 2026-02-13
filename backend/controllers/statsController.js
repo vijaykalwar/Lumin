@@ -57,7 +57,11 @@ exports.getDashboardStats = async (req, res) => {
         stats: {
           totalEntries,
           weekEntries,
-          activeGoals, // ✅ Fixed: Now included
+          activeGoals,
+          totalSessions: user.totalSessions || 0,
+          totalHours: user.totalHours || 0,
+          bestStreak: user.bestStreak || user.streak || 0,
+          totalBadges: user.badges?.length || 0,
           longestStreak: user.streak,
           totalXP: user.xp
         },

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { goalsAPI } from '../utils/api';
+import { showToast } from '../utils/toast';
 import { ArrowLeft, Target, Plus, X } from 'lucide-react';
 
 function CreateGoal() {
@@ -90,8 +91,9 @@ function CreateGoal() {
     const result = await goalsAPI.create(goalData);
 
     if (result.success) {
-      showToast.success(`Goal created! +${result.data.xpEarned} XP 🎯`);
-      navigate('/goals');
+      showToast.success(`Goal created successfully! +${result.data.xpEarned} XP`);
+      // Return to home/dashboard after creating a goal
+      navigate('/dashboard');
     } else {
       setError(result.message || 'Failed to create goal');
     }
@@ -100,7 +102,7 @@ function CreateGoal() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

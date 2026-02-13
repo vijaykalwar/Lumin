@@ -1,22 +1,81 @@
 // ════════════════════════════════════════════════════════════
-// API UTILITY - Centralized API calls
+// API UTILITY - Centralized API calls (timeout + token refresh)
 // ════════════════════════════════════════════════════════════
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_TIMEOUT = 10000; // 10 seconds
 
-// ========== GET TOKEN FROM LOCALSTORAGE ==========
-const getToken = () => {
-  return localStorage.getItem('token');
-};
+const getToken = () => localStorage.getItem('token');
+const getRefreshToken = () => localStorage.getItem('refreshToken');
 
-// ========== HEADERS WITH AUTH ==========
 const getHeaders = () => {
   const token = getToken();
   return {
     'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` })
+    ...(token && { Authorization: `Bearer ${token}` }),
   };
 };
+
+// Fetch with timeout (abort after API_TIMEOUT ms)
+async function fetchWithTimeout(url, options = {}, timeoutMs = API_TIMEOUT) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return res;
+  } catch (e) {
+    clearTimeout(id);
+    if (e.name === 'AbortError') throw new Error('Request timeout. Please try again.');
+    throw e;
+  }
+}
+
+// Authenticated request: timeout + on 401 try refresh token and retry once
+async function authenticatedFetch(url, options = {}) {
+  const doRequest = (token) => {
+    const isFormData = options.body instanceof FormData;
+    const headers = {
+      ...(!isFormData && { 'Content-Type': 'application/json' }),
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    };
+    return fetchWithTimeout(url, { ...options, headers }, API_TIMEOUT);
+  };
+
+  let res = await doRequest(getToken());
+
+  if (res.status === 401) {
+    const refresh = getRefreshToken();
+    if (refresh) {
+      try {
+        const refreshRes = await fetchWithTimeout(
+          `${API_BASE_URL}/auth/refresh-token`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: refresh }),
+          },
+          API_TIMEOUT
+        );
+        const data = await refreshRes.json();
+        if (data.success && data.token) {
+          localStorage.setItem('token', data.token);
+          if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+          res = await doRequest(data.token);
+        }
+      } catch (_) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') window.location.href = '/login';
+        throw new Error('Session expired. Please log in again.');
+      }
+    }
+  }
+
+  return res;
+}
 
 // ════════════════════════════════════════════════════════════
 // ENTRY API CALLS
@@ -25,10 +84,9 @@ const getHeaders = () => {
 export const entryAPI = {
   create: async (entryData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/entries`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/entries`, {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(entryData)
+        body: JSON.stringify(entryData),
       });
       return await response.json();
     } catch (error) {
@@ -40,11 +98,7 @@ export const entryAPI = {
     try {
       const queryParams = new URLSearchParams(filters).toString();
       const url = `${API_BASE_URL}/entries${queryParams ? `?${queryParams}` : ''}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(url, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -53,10 +107,7 @@ export const entryAPI = {
 
   getOne: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/entries/${id}`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/entries/${id}`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -65,10 +116,7 @@ export const entryAPI = {
 
   getToday: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/entries/today`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/entries/today`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -77,10 +125,9 @@ export const entryAPI = {
 
   update: async (id, updates) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/entries/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/entries/${id}`, {
         method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(updates)
+        body: JSON.stringify(updates),
       });
       return await response.json();
     } catch (error) {
@@ -90,15 +137,12 @@ export const entryAPI = {
 
   delete: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/entries/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/entries/${id}`, { method: 'DELETE' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
     }
-  }
+  },
 };
 
 // ════════════════════════════════════════════════════════════
@@ -108,11 +152,15 @@ export const entryAPI = {
 export const authAPI = {
   register: async (name, email, password) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/auth/register`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password }),
+        },
+        API_TIMEOUT
+      );
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -121,16 +169,20 @@ export const authAPI = {
 
   login: async (email, password) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/auth/login`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        },
+        API_TIMEOUT
+      );
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
     }
-  }
+  },
 };
 
 // ════════════════════════════════════════════════════════════
@@ -140,10 +192,7 @@ export const authAPI = {
 export const statsAPI = {
   getDashboard: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/stats/dashboard`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/stats/dashboard`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -152,10 +201,7 @@ export const statsAPI = {
 
   getMoodTrends: async (days = 30) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/stats/mood-trends?days=${days}`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/stats/mood-trends?days=${days}`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -164,10 +210,7 @@ export const statsAPI = {
 
   getWeeklyActivity: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/stats/weekly-activity`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/stats/weekly-activity`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -176,10 +219,7 @@ export const statsAPI = {
 
   getGoalConsistency: async (days = 30) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/stats/goal-consistency?days=${days}`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/stats/goal-consistency?days=${days}`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -188,15 +228,12 @@ export const statsAPI = {
 
   getGoalTimeline: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/stats/goal-timeline`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/stats/goal-timeline`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
     }
-  }
+  },
 };
 
 // ════════════════════════════════════════════════════════════
@@ -206,10 +243,9 @@ export const statsAPI = {
 export const goalsAPI = {
   create: async (goalData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/goals`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/goals`, {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(goalData)
+        body: JSON.stringify(goalData),
       });
       return await response.json();
     } catch (error) {
@@ -221,11 +257,7 @@ export const goalsAPI = {
     try {
       const queryParams = new URLSearchParams(filters).toString();
       const url = `${API_BASE_URL}/goals${queryParams ? `?${queryParams}` : ''}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(url, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -234,10 +266,7 @@ export const goalsAPI = {
 
   getOne: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/goals/${id}`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/goals/${id}`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -246,10 +275,9 @@ export const goalsAPI = {
 
   update: async (id, updates) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/goals/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/goals/${id}`, {
         method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(updates)
+        body: JSON.stringify(updates),
       });
       return await response.json();
     } catch (error) {
@@ -259,10 +287,9 @@ export const goalsAPI = {
 
   updateProgress: async (id, currentValue) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/goals/${id}/progress`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/goals/${id}/progress`, {
         method: 'PATCH',
-        headers: getHeaders(),
-        body: JSON.stringify({ currentValue })
+        body: JSON.stringify({ currentValue }),
       });
       return await response.json();
     } catch (error) {
@@ -272,10 +299,7 @@ export const goalsAPI = {
 
   completeMilestone: async (goalId, milestoneId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/goals/${goalId}/milestones/${milestoneId}`, {
-        method: 'PATCH',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/goals/${goalId}/milestones/${milestoneId}`, { method: 'PATCH' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -284,10 +308,7 @@ export const goalsAPI = {
 
   delete: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/goals/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/goals/${id}`, { method: 'DELETE' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
@@ -296,15 +317,12 @@ export const goalsAPI = {
 
   getStats: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/goals/stats/overview`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await authenticatedFetch(`${API_BASE_URL}/goals/stats/overview`, { method: 'GET' });
       return await response.json();
     } catch (error) {
       return { success: false, message: error.message };
     }
-  }
+  },
 };
 
 // ════════════════════════════════════════════════════════════
@@ -314,9 +332,8 @@ export const goalsAPI = {
 export const challengesAPI = {
   getToday: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/challenges/today`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/challenges/today`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -326,10 +343,9 @@ export const challengesAPI = {
 
   complete: async (challengeId, progress) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/challenges/${challengeId}/complete`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/challenges/${challengeId}/complete`, {
         method: 'PATCH',
-        headers: getHeaders(),
-        body: JSON.stringify({ progress })
+        body: JSON.stringify({ progress }),
       });
       return await response.json();
     } catch (error) {
@@ -339,9 +355,8 @@ export const challengesAPI = {
 
   getHistory: async (days = 30) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/challenges/history?days=${days}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/challenges/history?days=${days}`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -351,9 +366,8 @@ export const challengesAPI = {
 
   getStats: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/challenges/stats`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/challenges/stats`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -375,9 +389,8 @@ export const aiAPI = {
    */
   getPrompts: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/prompts`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/ai/prompts`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -391,9 +404,8 @@ export const aiAPI = {
    */
   analyzeMood: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/analyze-mood`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/ai/analyze-mood`, {
         method: 'POST',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -407,10 +419,9 @@ export const aiAPI = {
    */
   planGoal: async (goalData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/plan-goal`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/ai/plan-goal`, {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(goalData)
+        body: JSON.stringify(goalData),
       });
       return await response.json();
     } catch (error) {
@@ -424,9 +435,8 @@ export const aiAPI = {
    */
   suggestHabits: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/suggest-habits`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/ai/suggest-habits`, {
         method: 'POST',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -440,9 +450,8 @@ export const aiAPI = {
    */
   getMotivation: async (data) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/motivate`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/ai/motivate`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify(data)
       });
       return await response.json();
@@ -457,9 +466,8 @@ export const aiAPI = {
    */
   chat: async (data) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/chat`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify(data)
       });
       return await response.json();
@@ -477,9 +485,8 @@ export const aiAPI = {
 export const pomodoroAPI = {
   start: async (sessionData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pomodoro/start`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/pomodoro/start`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify(sessionData)
       });
       return await response.json();
@@ -490,9 +497,8 @@ export const pomodoroAPI = {
 
   complete: async (id, notes) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pomodoro/${id}/complete`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/pomodoro/${id}/complete`, {
         method: 'PATCH',
-        headers: getHeaders(),
         body: JSON.stringify({ notes })
       });
       return await response.json();
@@ -503,9 +509,8 @@ export const pomodoroAPI = {
 
   getAll: async (limit = 20, page = 1) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pomodoro?limit=${limit}&page=${page}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/pomodoro?limit=${limit}&page=${page}`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -515,9 +520,8 @@ export const pomodoroAPI = {
 
   getToday: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pomodoro/today`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/pomodoro/today`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -527,9 +531,8 @@ export const pomodoroAPI = {
 
   getStats: async (days = 7) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pomodoro/stats?days=${days}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/pomodoro/stats?days=${days}`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -539,9 +542,8 @@ export const pomodoroAPI = {
 
   delete: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pomodoro/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/pomodoro/${id}`, {
         method: 'DELETE',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -556,9 +558,8 @@ export const pomodoroAPI = {
 export const postsAPI = {
   create: async (postData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify(postData)
       });
       return await response.json();
@@ -569,9 +570,8 @@ export const postsAPI = {
 
   getFeed: async (type = 'all', limit = 20, page = 1) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/feed?type=${type}&limit=${limit}&page=${page}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts/feed?type=${type}&limit=${limit}&page=${page}`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -581,9 +581,8 @@ export const postsAPI = {
 
   getMyPosts: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/my-posts`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts/my-posts`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -593,9 +592,8 @@ export const postsAPI = {
 
   addReaction: async (postId, type) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}/react`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts/${postId}/react`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({ type })
       });
       return await response.json();
@@ -606,9 +604,8 @@ export const postsAPI = {
 
   removeReaction: async (postId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}/react`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts/${postId}/react`, {
         method: 'DELETE',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -618,9 +615,8 @@ export const postsAPI = {
 
   addComment: async (postId, content) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}/comment`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts/${postId}/comment`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({ content })
       });
       return await response.json();
@@ -631,9 +627,8 @@ export const postsAPI = {
 
   deleteComment: async (postId, commentId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}/comment/${commentId}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts/${postId}/comment/${commentId}`, {
         method: 'DELETE',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -643,9 +638,8 @@ export const postsAPI = {
 
   delete: async (postId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/posts/${postId}`, {
         method: 'DELETE',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -661,9 +655,8 @@ export const postsAPI = {
 export const teamsAPI = {
   create: async (teamData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify(teamData)
       });
       return await response.json();
@@ -674,9 +667,8 @@ export const teamsAPI = {
 
   getMyTeams: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams/my-teams`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams/my-teams`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -686,9 +678,8 @@ export const teamsAPI = {
 
   getOne: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams/${id}`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -698,9 +689,8 @@ export const teamsAPI = {
 
   join: async (inviteCode) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams/join`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams/join`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({ inviteCode })
       });
       return await response.json();
@@ -711,9 +701,8 @@ export const teamsAPI = {
 
   leave: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams/${id}/leave`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams/${id}/leave`, {
         method: 'POST',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -723,9 +712,8 @@ export const teamsAPI = {
 
   getFeed: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams/${id}/feed`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams/${id}/feed`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -735,9 +723,8 @@ export const teamsAPI = {
 
   getLeaderboard: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams/${id}/leaderboard`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams/${id}/leaderboard`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -747,9 +734,8 @@ export const teamsAPI = {
 
   delete: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/teams/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/teams/${id}`, {
         method: 'DELETE',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -768,9 +754,8 @@ export const profileAPI = {
    */
   getProfile: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/profile`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/profile`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -784,9 +769,8 @@ export const profileAPI = {
    */
   updateProfile: async (profileData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/profile`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/profile`, {
         method: 'PUT',
-        headers: getHeaders(),
         body: JSON.stringify(profileData)
       });
       return await response.json();
@@ -801,9 +785,8 @@ export const profileAPI = {
    */
   updateSettings: async (settings) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/profile/settings`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/profile/settings`, {
         method: 'PUT',
-        headers: getHeaders(),
         body: JSON.stringify(settings)
       });
       return await response.json();
@@ -818,9 +801,8 @@ export const profileAPI = {
    */
   changePassword: async (passwordData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/profile/password`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/profile/password`, {
         method: 'PUT',
-        headers: getHeaders(),
         body: JSON.stringify(passwordData)
       });
       return await response.json();
@@ -835,9 +817,8 @@ export const profileAPI = {
    */
   getStats: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/profile/stats`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/profile/stats`, {
         method: 'GET',
-        headers: getHeaders()
       });
       return await response.json();
     } catch (error) {
@@ -854,14 +835,9 @@ export const profileAPI = {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const token = getToken();
-      const response = await fetch(`${API_BASE_URL}/profile/avatar`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/profile/avatar`, {
         method: 'POST',
-        headers: {
-          ...(token && { 'Authorization': `Bearer ${token}` })
-          // Don't set Content-Type - browser will set it with boundary
-        },
-        body: formData
+        body: formData,
       });
       return await response.json();
     } catch (error) {

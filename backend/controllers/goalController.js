@@ -1,5 +1,6 @@
 const Goal = require('../models/Goal');
 const User = require('../models/User');
+const { sanitizeInput, sanitizeArray } = require('../utils/sanitize');
 const { calculateLevel } = require('../utils/gamification');
 const emailService = require('../services/emailService');
 // ════════════════════════════════════════════════════════════
@@ -9,7 +10,7 @@ const emailService = require('../services/emailService');
 // ════════════════════════════════════════════════════════════
 exports.createGoal = async (req, res) => {
   try {
-    const {
+    let {
       title,
       description,
       metric,
@@ -21,6 +22,19 @@ exports.createGoal = async (req, res) => {
       milestones,
       tags
     } = req.body;
+
+    // ========== XSS SANITIZATION ==========
+    title = title ? sanitizeInput(String(title)) : '';
+    description = description ? sanitizeInput(String(description)) : '';
+    metric = metric ? sanitizeInput(String(metric)) : 'Progress';
+    tags = Array.isArray(tags) ? sanitizeArray(tags) : [];
+    if (Array.isArray(milestones)) {
+      milestones = milestones.map((m) => ({
+        ...m,
+        title: m.title ? sanitizeInput(String(m.title)) : '',
+        description: m.description ? sanitizeInput(String(m.description)) : ''
+      }));
+    }
 
     // ========== VALIDATION ==========
     if (!title || !description || !targetValue || !targetDate || !category) {
@@ -79,20 +93,51 @@ exports.createGoal = async (req, res) => {
 // ════════════════════════════════════════════════════════════
 exports.getGoals = async (req, res) => {
   try {
-    const { status, category, limit = 20, page = 1 } = req.query;
+    const { 
+      query,           // NEW: Text search
+      status, 
+      category,
+      priority,        // NEW: Priority filter
+      sortBy = 'date', // NEW: Sort option (date, progress, deadline, priority)
+      sortOrder = 'desc', // NEW: Sort order
+      limit = 20, 
+      page = 1 
+    } = req.query;
 
     // ========== BUILD FILTER ==========
     const filter = { user: req.user._id };
 
+    // NEW: Text search in title and description
+    if (query) {
+      filter.$or = [
+        { title: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } }
+      ];
+    }
+
     if (status) filter.status = status;
     if (category) filter.category = category;
+    if (priority) filter.priority = priority;
+
+    // ========== BUILD SORT ==========
+    const sortOptions = {};
+    if (sortBy === 'progress') {
+      sortOptions.currentValue = sortOrder === 'asc' ? 1 : -1;
+    } else if (sortBy === 'deadline') {
+      sortOptions.targetDate = sortOrder === 'asc' ? 1 : -1;
+    } else if (sortBy === 'priority') {
+      // Custom sort: high > medium > low
+      sortOptions.priority = sortOrder === 'asc' ? 1 : -1;
+    } else {
+      sortOptions.createdAt = sortOrder === 'asc' ? 1 : -1; // Default: date
+    }
 
     // ========== PAGINATION ==========
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // ========== GET GOALS WITH PAGINATION ==========
     const goals = await Goal.find(filter)
-      .sort({ createdAt: -1 })
+      .sort(sortOptions)
       .limit(parseInt(limit))
       .skip(skip)
       .select('-__v')
@@ -124,6 +169,15 @@ exports.getGoals = async (req, res) => {
           totalPages: Math.ceil(total / parseInt(limit)),
           totalGoals: total,
           hasMore: skip + goals.length < total
+        },
+        // NEW: Return applied filters for UI
+        appliedFilters: {
+          query: query || null,
+          status: status || null,
+          category: category || null,
+          priority: priority || null,
+          sortBy,
+          sortOrder
         }
       }
     });

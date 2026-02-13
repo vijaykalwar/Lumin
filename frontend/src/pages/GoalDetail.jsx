@@ -71,38 +71,38 @@ function GoalDetail() {
   }
 
   const categories = {
-    career: { icon: '💼', color: 'blue' },
-    health: { icon: '💪', color: 'green' },
-    learning: { icon: '📚', color: 'yellow' },
-finance: { icon: '💰', color: 'emerald' },
-relationships: { icon: '❤️', color: 'pink' },
-hobbies: { icon: '🎨', color: 'purple' },
-other: { icon: '🎯', color: 'gray' }
-};
-const categoryConfig = categories[goal.category] || categories.other;
-return (
-<div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-<Navbar />
-  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
-    {/* Header */}
-    <div className="flex items-center justify-between mb-8">
-      <button
-        onClick={() => navigate('/goals')}
-        className="flex items-center space-x-2 text-gray-400 hover:text-white transition"
-      >
-        <ArrowLeft size={20} />
-        <span>Back to Goals</span>
-      </button>
-    </div>
-
-    {/* Goal Header Card */}
-    <div className="card mb-8">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full bg-${categoryConfig.color}-500/20 text-${categoryConfig.color}-400`}>
-          <span className="text-2xl">{categoryConfig.icon}</span>
-          <span className="font-semibold capitalize">{goal.category}</span>
+    career: { icon: '💼', color: 'blue', categoryClass: 'bg-blue-500/20 text-blue-400' },
+    health: { icon: '💪', color: 'green', categoryClass: 'bg-green-500/20 text-green-400' },
+    learning: { icon: '📚', color: 'yellow', categoryClass: 'bg-yellow-500/20 text-yellow-400' },
+    finance: { icon: '💰', color: 'emerald', categoryClass: 'bg-emerald-500/20 text-emerald-400' },
+    relationships: { icon: '❤️', color: 'pink', categoryClass: 'bg-pink-500/20 text-pink-400' },
+    hobbies: { icon: '🎨', color: 'purple', categoryClass: 'bg-purple-500/20 text-purple-400' },
+    other: { icon: '🎯', color: 'gray', categoryClass: 'bg-gray-500/20 text-gray-400' }
+  };
+  const categoryConfig = categories[goal.category] || categories.other;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <Navbar />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate('/goals')}
+            className="flex items-center space-x-2 text-gray-400 hover:text-white transition"
+          >
+            <ArrowLeft size={20} />
+            <span>Back to Goals</span>
+          </button>
         </div>
+
+        {/* Goal Header Card */}
+        <div className="card mb-8">
+          <div className="flex items-start justify-between mb-4">
+            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${categoryConfig.categoryClass}`}>
+              <span className="text-2xl">{categoryConfig.icon}</span>
+              <span className="font-semibold capitalize">{goal.category}</span>
+            </div>
         
         <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
           goal.status === 'completed' ? 'bg-green-500/20 text-green-400' :

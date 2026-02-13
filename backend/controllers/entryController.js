@@ -1,11 +1,14 @@
 const Entry = require('../models/Entry');
 const User = require('../models/User');
-const { 
-  calculateXP, 
-  calculateLevel, 
-  updateStreak, 
-  checkBadges, 
-  checkLevelUp 
+const { sanitizeInput, sanitizeArray } = require('../utils/sanitize');
+const { invalidateUserCache } = require('../utils/cache');
+const { queryWithTimeout } = require('../utils/queryTimeout');
+const {
+  calculateXP,
+  calculateLevel,
+  updateStreak,
+  checkBadges,
+  checkLevelUp
 } = require('../utils/gamification');
 const { updateChallengeProgress } = require('../services/challengeService');
 
@@ -16,18 +19,23 @@ const { updateChallengeProgress } = require('../services/challengeService');
 // ════════════════════════════════════════════════════════════
 exports.createEntry = async (req, res) => {
   try {
-    const { 
-      mood, 
-      moodEmoji, 
-      moodIntensity, 
-      title, 
-      notes, 
-      tags, 
-      isPrivate, 
+    let {
+      mood,
+      moodEmoji,
+      moodIntensity,
+      title,
+      notes,
+      tags,
+      isPrivate,
       entryDate,
       category,
-      location 
+      location
     } = req.body;
+
+    // ========== XSS SANITIZATION ==========
+    title = title ? sanitizeInput(String(title)) : '';
+    notes = sanitizeInput(notes || '');
+    tags = Array.isArray(tags) ? sanitizeArray(tags) : [];
 
     // ========== VALIDATION ==========
     if (!mood || !notes) {
@@ -72,7 +80,7 @@ exports.createEntry = async (req, res) => {
       moodIntensity: moodIntensity || 5,
       title: title || '',
       notes,
-      tags: tags || [],
+      tags,
       category: category || 'personal',
       location: location || null,
       isPrivate: isPrivate !== undefined ? isPrivate : true,
@@ -130,6 +138,8 @@ exports.createEntry = async (req, res) => {
     // ========== SAVE USER ==========
     await user.save();
 
+    invalidateUserCache(req.user._id.toString());
+
     // ========== RESPONSE WITH DETAILED REWARDS ==========
     res.status(201).json({
       success: true,
@@ -186,17 +196,28 @@ exports.createEntry = async (req, res) => {
 exports.getEntries = async (req, res) => {
   try {
     const { 
+      query,     // NEW: Text search
       mood, 
       tags, 
       category,
       startDate, 
-      endDate, 
+      endDate,
+      sortBy = 'date',    // NEW: Sort option (date, title)
+      sortOrder = 'desc', // NEW: Sort order (asc, desc)
       limit = 20, 
       page = 1 
     } = req.query;
 
     // ========== BUILD FILTER ==========
     const filter = { user: req.user._id };
+
+    // NEW: Text search in title and notes
+    if (query) {
+      filter.$or = [
+        { title: { $regex: query, $options: 'i' } },
+        { notes: { $regex: query, $options: 'i' } }
+      ];
+    }
 
     if (mood) {
       filter.mood = mood.toLowerCase();
@@ -216,18 +237,29 @@ exports.getEntries = async (req, res) => {
       if (endDate) filter.entryDate.$lte = new Date(endDate);
     }
 
+    // ========== BUILD SORT ==========
+    const sortOptions = {};
+    if (sortBy === 'title') {
+      sortOptions.title = sortOrder === 'asc' ? 1 : -1;
+    } else {
+      sortOptions.entryDate = sortOrder === 'asc' ? 1 : -1;  // Default: date
+    }
+
     // ========== PAGINATION ==========
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // ========== GET ENTRIES ==========
-    const entries = await Entry.find(filter)
-      .sort({ entryDate: -1 })  // Newest first
-      .limit(parseInt(limit))
-      .skip(skip)
-      .select('-__v')
-      .lean();
+    // ========== GET ENTRIES (with timeout) ==========
+    const entries = await queryWithTimeout(
+      Entry.find(filter)
+        .sort(sortOptions)
+        .limit(Math.min(parseInt(limit) || 20, 100))
+        .skip(skip)
+        .select('-__v')
+        .lean(),
+      10000
+    );
 
-    const total = await Entry.countDocuments(filter);
+    const total = await queryWithTimeout(Entry.countDocuments(filter), 5000);
 
     // ========== RESPONSE ==========
     res.status(200).json({
@@ -239,11 +271,27 @@ exports.getEntries = async (req, res) => {
           totalPages: Math.ceil(total / parseInt(limit)),
           totalEntries: total,
           hasMore: skip + entries.length < total
+        },
+        // NEW: Return applied filters for UI
+        appliedFilters: {
+          query: query || null,
+          mood: mood || null,
+          category: category || null,
+          tags: tags ? tags.split(',') : null,
+          dateRange: (startDate || endDate) ? { startDate, endDate } : null,
+          sortBy,
+          sortOrder
         }
       }
     });
 
   } catch (error) {
+    if (error.message === 'Query timeout') {
+      return res.status(504).json({
+        success: false,
+        message: 'Request took too long. Try narrower filters.'
+      });
+    }
     console.error('Get Entries Error:', error);
     res.status(500).json({
       success: false,
@@ -345,7 +393,13 @@ exports.updateEntry = async (req, res) => {
 
     allowedUpdates.forEach(field => {
       if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
+        if (field === 'notes' || field === 'title') {
+          updates[field] = sanitizeInput(String(req.body[field]));
+        } else if (field === 'tags' && Array.isArray(req.body[field])) {
+          updates[field] = sanitizeArray(req.body[field]);
+        } else {
+          updates[field] = req.body[field];
+        }
       }
     });
 
@@ -376,6 +430,8 @@ exports.updateEntry = async (req, res) => {
         await user.save();
       }
     }
+
+    invalidateUserCache(req.user._id.toString());
 
     // ========== RESPONSE ==========
     res.status(200).json({

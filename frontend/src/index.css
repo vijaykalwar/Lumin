@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Phase 3 Enhancements */
+@import './styles/enhancements.css';
+
+/* Phase 4 Micro-Interactions */
+@import './styles/micro-interactions.css';
+
 /* ═══════════════════════════════════════════════════════════
    🎨 PREMIUM DESIGN SYSTEM - LUMIN
    ═══════════════════════════════════════════════════════════ */
@@ -21,6 +27,14 @@
   --glow-accent: 0 0 20px rgba(236, 72, 153, 0.5);
   --glow-success: 0 0 20px rgba(34, 197, 94, 0.5);
   --glow-info: 0 0 20px rgba(59, 130, 246, 0.5);
+
+  /* Neon Colors for Dashboard */
+  --neon-orange: hsl(24, 95%, 53%);
+  --neon-yellow: hsl(45, 93%, 58%);
+  --neon-cyan: hsl(189, 94%, 43%);
+  --neon-green: hsl(142, 71%, 45%);
+  --neon-pink: hsl(330, 81%, 60%);
+  --neon-purple: hsl(271, 91%, 65%);
 
   /* Enhanced Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);

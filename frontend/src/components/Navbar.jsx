@@ -72,15 +72,9 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
             
-            {/* ✨ LOGO - Unique Hexagon Design */}
-            <Link to="/dashboard" className="flex items-center gap-2 group">
-              <LuminLogo />
-              <span 
-                className="text-lg font-bold text-white hidden sm:inline"
-                style={{ fontFamily: 'Orbitron, sans-serif' }}
-              >
-                LUMIN
-              </span>
+            {/* ✨ LOGO - Icon only (single logo, no duplicate text) */}
+            <Link to="/dashboard" className="flex items-center gap-2 group" aria-label="LUMIN Home">
+              <LuminLogo className="flex-shrink-0" />
             </Link>
 
             {/* Desktop Tabs */}
