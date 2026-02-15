@@ -5,6 +5,7 @@
 // IMPORTANT: Must match Vercel env var name!
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 const API_TIMEOUT = 10000; // 10 seconds
+const AI_TIMEOUT = 18000; // 18 seconds for AI (avoid slow hang)
 
 console.log('🌐 API Base URL:', API_BASE_URL);
 
@@ -77,6 +78,17 @@ async function authenticatedFetch(url, options = {}) {
     }
   }
 
+  return res;
+}
+
+// AI requests with longer timeout and auth (no refresh retry to keep simple)
+async function aiFetch(url, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(getToken() && { Authorization: `Bearer ${getToken()}` }),
+    ...options.headers,
+  };
+  const res = await fetchWithTimeout(url, { ...options, headers }, AI_TIMEOUT);
   return res;
 }
 
@@ -154,6 +166,10 @@ export const entryAPI = {
 
 export const authAPI = {
   register: async (name, email, password) => {
+    // #region agent log
+    const _url = `${API_BASE_URL}/auth/register`;
+    fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.register',message:'register request',data:{url:_url,hasName:!!name,hasEmail:!!email,passwordLen:password?.length},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     try {
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/auth/register`,
@@ -164,13 +180,24 @@ export const authAPI = {
         },
         API_TIMEOUT
       );
-      return await response.json();
+      const data = await response.json();
+      // #region agent log
+      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.register',message:'register response',data:{status:response.status,success:data.success,message:data.message,hasToken:!!data.token,hasUser:!!data.user},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      return data;
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.register',message:'register catch',data:{errorName:error?.name,errorMessage:error?.message},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       return { success: false, message: error.message };
     }
   },
 
   login: async (email, password) => {
+    // #region agent log
+    const _url = `${API_BASE_URL}/auth/login`;
+    fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.login',message:'login request',data:{url:_url,hasEmail:!!email,passwordLen:password?.length},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     try {
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/auth/login`,
@@ -181,8 +208,15 @@ export const authAPI = {
         },
         API_TIMEOUT
       );
-      return await response.json();
+      const data = await response.json();
+      // #region agent log
+      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.login',message:'login response',data:{status:response.status,success:data.success,message:data.message,hasToken:!!data.token,hasUser:!!data.user},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      return data;
     } catch (error) {
+      // #region agent log
+      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.login',message:'login catch',data:{errorName:error?.name,errorMessage:error?.message},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       return { success: false, message: error.message };
     }
   },
@@ -392,93 +426,72 @@ export const aiAPI = {
    */
   getPrompts: async () => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/ai/prompts`, {
-        method: 'GET',
-      });
-      return await response.json();
+      const response = await aiFetch(`${API_BASE_URL}/ai/prompts`, { method: 'GET' });
+      const data = await response.json();
+      return response.ok ? data : { success: false, message: data?.message || 'Failed' };
     } catch (error) {
-      console.error('Get prompts error:', error);
-      return { success: false, message: error.message };
+      return { success: false, message: error?.message || 'Request failed' };
     }
   },
 
-  /**
-   * Analyze mood patterns
-   */
   analyzeMood: async () => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/ai/analyze-mood`, {
-        method: 'POST',
-      });
-      return await response.json();
+      const response = await aiFetch(`${API_BASE_URL}/ai/analyze-mood`, { method: 'POST' });
+      const data = await response.json();
+      return response.ok ? data : { success: false, message: data?.message || 'Failed' };
     } catch (error) {
-      console.error('Analyze mood error:', error);
-      return { success: false, message: error.message };
+      return { success: false, message: error?.message || 'Request failed' };
     }
   },
 
-  /**
-   * Plan a goal with AI
-   */
   planGoal: async (goalData) => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/ai/plan-goal`, {
+      const response = await aiFetch(`${API_BASE_URL}/ai/plan-goal`, {
         method: 'POST',
         body: JSON.stringify(goalData),
       });
-      return await response.json();
+      const data = await response.json();
+      return response.ok ? data : { success: false, message: data?.message || 'Failed' };
     } catch (error) {
-      console.error('Plan goal error:', error);
-      return { success: false, message: error.message };
+      return { success: false, message: error?.message || 'Request failed' };
     }
   },
 
-  /**
-   * Get habit suggestions
-   */
   suggestHabits: async () => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/ai/suggest-habits`, {
-        method: 'POST',
-      });
-      return await response.json();
+      const response = await aiFetch(`${API_BASE_URL}/ai/suggest-habits`, { method: 'POST' });
+      const data = await response.json();
+      return response.ok ? data : { success: false, message: data?.message || 'Failed' };
     } catch (error) {
-      console.error('Suggest habits error:', error);
-      return { success: false, message: error.message };
+      return { success: false, message: error?.message || 'Request failed' };
     }
   },
 
-  /**
-   * Get motivation
-   */
   getMotivation: async (data) => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/ai/motivate`, {
+      const response = await aiFetch(`${API_BASE_URL}/ai/motivate`, {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data ?? {}),
       });
-      return await response.json();
+      const out = await response.json();
+      return response.ok ? out : { success: false, message: out?.message || 'Failed' };
     } catch (error) {
-      console.error('Get motivation error:', error);
-      return { success: false, message: error.message };
+      return { success: false, message: error?.message || 'Request failed' };
     }
   },
 
-  /**
-   * Chat with AI
-   */
   chat: async (data) => {
     try {
-      const response = await authenticatedFetch(`${API_BASE_URL}/ai/chat`, {
+      const response = await aiFetch(`${API_BASE_URL}/ai/chat`, {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data ?? {}),
       });
-      return await response.json();
+      const out = await response.json();
+      return response.ok ? out : { success: false, message: out?.message || 'Failed' };
     } catch (error) {
-      console.error('Chat error:', error);
-      return { success: false, message: error.message };
+      return { success: false, message: error?.message || 'Request failed' };
     }
-  }
+  },
 };
 
 // ════════════════════════════════════════════════════════════
