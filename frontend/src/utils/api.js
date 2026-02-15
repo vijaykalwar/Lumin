@@ -2,8 +2,11 @@
 // API UTILITY - Centralized API calls (timeout + token refresh)
 // ════════════════════════════════════════════════════════════
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// IMPORTANT: Must match Vercel env var name!
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 const API_TIMEOUT = 10000; // 10 seconds
+
+console.log('🌐 API Base URL:', API_BASE_URL);
 
 const getToken = () => localStorage.getItem('token');
 const getRefreshToken = () => localStorage.getItem('refreshToken');
