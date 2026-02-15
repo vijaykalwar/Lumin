@@ -89,46 +89,81 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // 100 requests per window
-  message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many requests from this IP, please try again later.",
+    });
+  },
 });
 
 // ✅ Rate limiting - Auth routes (stricter)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 login/register attempts
-  message: "Too many authentication attempts, please try again later.",
+  max: 10, // Increased from 5 to 10 for better UX
   skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many authentication attempts. Please try again in 15 minutes.",
+    });
+  },
 });
 
 // ✅ Rate limiting - AI routes (stricter - expensive operations)
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: "Too many AI requests. Please wait before making more requests.",
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many AI requests. Please wait before making more requests.",
+    });
+  },
 });
 
 // ✅ Rate limiting - Profile, Stats, Export
 const profileLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  message: "Too many profile requests. Please try again later.",
   standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many profile requests. Please try again later.",
+    });
+  },
 });
 const statsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 60,
-  message: "Too many stats requests. Please try again later.",
   standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many stats requests. Please try again later.",
+    });
+  },
 });
 const exportLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
-  message: "Too many export requests. Please try again later.",
   standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: "Too many export requests. Please try again later.",
+    });
+  },
 });
 
 // Apply general rate limiter to all requests
