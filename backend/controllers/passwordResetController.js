@@ -46,7 +46,9 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // ========== SEND EMAIL ==========
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    // Use CORS_ORIGIN (already set) or FRONTEND_URL, with localhost fallback for development
+    const frontendUrl = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
     
     try {
       await emailService.sendPasswordResetEmail(user, resetUrl);
