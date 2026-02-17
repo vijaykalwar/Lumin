@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Send, Tag } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { entryAPI } from '../utils/api';
 import { sanitizeInput } from '../utils/sanitize';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { showToast } from '../utils/toast';
 function AddEntry() {
   const [formData, setFormData] = useState({
@@ -24,8 +25,10 @@ function AddEntry() {
 
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Mood options
+  // Mood options (value must match backend)
+  const moodIdToValue = { happy: 'happy', calm: 'neutral', thoughtful: 'neutral', frustrated: 'angry', sad: 'sad', tired: 'neutral', motivated: 'excited', anxious: 'anxious' };
   const moods = [
     { value: 'amazing', emoji: '🤩', label: 'Amazing' },
     { value: 'happy', emoji: '😊', label: 'Happy' },
@@ -36,6 +39,14 @@ function AddEntry() {
     { value: 'stressed', emoji: '😫', label: 'Stressed' },
     { value: 'angry', emoji: '😠', label: 'Angry' }
   ];
+
+  useEffect(() => {
+    const selected = location.state?.selectedMood;
+    if (selected?.id && selected?.emoji) {
+      const value = moodIdToValue[selected.id] || selected.id;
+      setFormData((prev) => ({ ...prev, mood: value, moodEmoji: selected.emoji }));
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const checkTodayEntry = async () => {
@@ -242,6 +253,7 @@ const handleSubmit = async (e) => {
       </div>
 
     </div>
+  <BottomNav />
   </div>
 );}
 export default AddEntry;

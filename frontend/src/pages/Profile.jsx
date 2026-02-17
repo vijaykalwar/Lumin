@@ -4,7 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import {User,Mail,MapPin,Briefcase,Calendar,Edit2,
   Save, X,Lock, Settings,Trophy,TrendingUp,Target,Clock,Award, Loader2} from 'lucide-react';
 import { showToast } from '../utils/toast';
-import Dashboard from "./Dashboard";
+import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -166,7 +167,9 @@ const handleSaveProfile = async () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      <Navbar />
+      <div className="p-4 sm:p-6 lg:p-8 pb-24">
       <div className="max-w-6xl mx-auto">
         
         {/* Header */}
@@ -639,5 +642,7 @@ const handleSaveProfile = async () => {
 
   </div>
 </div>
+      <BottomNav />
+      </div>
 );
 }

@@ -88,7 +88,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // ✅ Rate limiting - General
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: process.env.NODE_ENV === 'production' ? 100 : 500, // 500 in dev, 100 in prod
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -102,7 +102,7 @@ const generalLimiter = rateLimit({
 // ✅ Rate limiting - Auth routes (stricter)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Increased from 5 to 10 for better UX
+  max: process.env.NODE_ENV === 'production' ? 10 : 50, // 50 in dev, 10 in prod
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,

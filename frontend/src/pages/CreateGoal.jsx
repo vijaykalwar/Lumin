@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { goalsAPI } from '../utils/api';
 import { showToast } from '../utils/toast';
 import { ArrowLeft, Target, Plus, X } from 'lucide-react';
@@ -24,6 +25,20 @@ function CreateGoal() {
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const template = location.state?.template;
+    if (template?.name) {
+      setFormData((prev) => ({
+        ...prev,
+        title: template.name || prev.title,
+        description: template.description || prev.description,
+        category: template.category || prev.category,
+        priority: template.priority || prev.priority
+      }));
+    }
+  }, [location.state]);
 
   const categories = [
     { value: 'career', icon: '💼', label: 'Career' },
@@ -356,6 +371,7 @@ function CreateGoal() {
           </form>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

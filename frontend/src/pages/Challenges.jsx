@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import DailyChallenges from '../components/DailyChallenges';
 import { challengesAPI } from '../utils/api';
 import { Trophy, TrendingUp, Calendar, Award } from 'lucide-react';
@@ -143,6 +144,7 @@ function Challenges() {
           )}
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

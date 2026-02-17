@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 
 /**
@@ -49,25 +50,19 @@ const AICoachCard = ({ streak = 0 }) => {
         </p>
       </div>
 
-      {/* Action Button (Disabled) */}
-      <button
-        disabled
-        className="w-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-semibold py-3 px-4 rounded-xl cursor-not-allowed relative group"
+      {/* Action: Open AI Chat */}
+      <Link
+        to="/ai-chat"
+        className="block w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl text-center hover:opacity-90 transition-opacity shadow-lg"
       >
         <span className="flex items-center justify-center gap-2">
           <Sparkles className="w-4 h-4" />
           Chat with AI Coach
         </span>
-        
-        {/* Coming Soon Badge */}
-        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-          Coming Soon
-        </div>
-      </button>
+      </Link>
 
-      {/* Info Text */}
-      <div className="text-xs text-center text-gray-500 dark:text-gray-500">
-        AI-powered coaching will be available soon!
+      <div className="text-xs text-center text-gray-500 dark:text-gray-400">
+        Get mood analysis, goal planning &amp; motivation
       </div>
     </div>
   );

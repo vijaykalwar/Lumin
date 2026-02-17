@@ -4,7 +4,7 @@ import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { showToast } from '../utils/toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -78,7 +78,7 @@ export default function ForgotPassword() {
         {/* Back to Login */}
         <Link
           to="/login"
-          className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 mb-6 transition-colors cursor-pointer min-h-[44px] items-center touch-manipulation"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Login
@@ -125,7 +125,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full min-h-[48px] py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
             >
               {loading ? (
                 <>

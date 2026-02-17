@@ -1,12 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Phase 3 Enhancements */
 @import './styles/enhancements.css';
 
 /* Phase 4 Micro-Interactions */
 @import './styles/micro-interactions.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════
    🎨 PREMIUM DESIGN SYSTEM - LUMIN
@@ -542,6 +542,14 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-purple-600;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* ────────────────────────────────────────────────────────────

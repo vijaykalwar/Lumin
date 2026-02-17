@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { aiAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -53,9 +54,13 @@ export default function AIChat() {
   }, [user]);
 
   const loadPrompts = async () => {
-    const result = await aiAPI.getPrompts();
-    if (result.success) {
-      setPrompts(result.data);
+    try {
+      const result = await aiAPI.getPrompts();
+      if (result?.success && result.data != null) {
+        setPrompts(Array.isArray(result.data) ? result.data : (result.data.prompts || []));
+      }
+    } catch (_) {
+      setPrompts([]);
     }
   };
 
@@ -72,64 +77,45 @@ export default function AIChat() {
     setInput('');
     setLoading(true);
 
-    let result;
+    let result = null;
     try {
       result = await aiAPI.chat({
         message: messageText,
         conversationHistory: messages
       });
 
-      if (result.success) {
-        const aiMessage = {
+      if (result?.success && result?.data?.response) {
+        setMessages(prev => [...prev, {
           role: 'assistant',
           content: result.data.response,
           timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMessage]);
+        }]);
       } else {
-        // Show actual error message from backend with better formatting
-        let errorContent = result.message || 'Failed to process your message. Please try again.';
-        
-        // Format leaked API key error better
-        if (result.message?.includes('leaked')) {
-          errorContent = '⚠️ API key issue detected. Please contact support or check API configuration.';
-        }
-        
-        const errorMessage = {
+        const errMsg = result?.message || 'Failed to process your message. Please try again.';
+        const errorContent = errMsg.includes('leaked')
+          ? '⚠️ API configuration issue. Please try again later.'
+          : `❌ ${errMsg}`;
+        setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `❌ ${errorContent}`,
+          content: errorContent,
           timestamp: new Date()
-        };
-        setMessages(prev => [...prev, errorMessage]);
-        console.error('AI API Error:', result);
+        }]);
       }
     } catch (error) {
-      console.error('Chat error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        result: result
-      });
-      
-      let errorContent = '❌ Oops! I encountered an error. Please try again.';
-      
-      // More specific error messages based on error type
-      if (result?.message) {
-        errorContent = `❌ ${result.message}`;
-      } else if (error.message) {
-        if (error.message.includes('fetch') || error.message.includes('network')) {
-          errorContent = '❌ Network error. Please check your internet connection.';
-        } else {
-          errorContent = `❌ Error: ${error.message}`;
-        }
+      const errMsg = result?.message || error?.message || '';
+      let errorContent = '❌ Something went wrong. Please try again.';
+      if (errMsg.includes('timeout') || errMsg.includes('Timeout')) {
+        errorContent = '❌ Request took too long. Please try again.';
+      } else if (errMsg.includes('fetch') || errMsg.includes('network') || error?.name === 'TypeError') {
+        errorContent = '❌ Network error. Check your connection and try again.';
+      } else if (errMsg) {
+        errorContent = `❌ ${errMsg}`;
       }
-      
-      const errorMessage = {
+      setMessages(prev => [...prev, {
         role: 'assistant',
         content: errorContent,
         timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      }]);
     } finally {
       setLoading(false);
     }
@@ -144,20 +130,11 @@ export default function AIChat() {
         setLoading(true);
         try {
           const result = await aiAPI.analyzeMood();
-          if (result.success) {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: result.data.analysis,
-              timestamp: new Date()
-            }]);
-          } else {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: result.message || 'Failed to analyze mood. Please try again.',
-              timestamp: new Date()
-            }]);
-          }
-        } catch (error) {
+          const content = result?.success && result?.data?.analysis
+            ? result.data.analysis
+            : (result?.message || 'Could not analyze mood. Try adding more journal entries first.');
+          setMessages(prev => [...prev, { role: 'assistant', content, timestamp: new Date() }]);
+        } catch {
           setMessages(prev => [...prev, {
             role: 'assistant',
             content: '❌ Failed to analyze mood. Please try again.',
@@ -182,20 +159,11 @@ export default function AIChat() {
         setLoading(true);
         try {
           const result = await aiAPI.getMotivation({ situation: 'general' });
-          if (result.success) {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: result.data.motivation,
-              timestamp: new Date()
-            }]);
-          } else {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: result.message || 'Failed to get motivation. Please try again.',
-              timestamp: new Date()
-            }]);
-          }
-        } catch (error) {
+          const content = result?.success && result?.data?.motivation
+            ? result.data.motivation
+            : (result?.message || 'Could not fetch motivation right now.');
+          setMessages(prev => [...prev, { role: 'assistant', content, timestamp: new Date() }]);
+        } catch {
           setMessages(prev => [...prev, {
             role: 'assistant',
             content: '❌ Failed to get motivation. Please try again.',
@@ -214,20 +182,11 @@ export default function AIChat() {
         setLoading(true);
         try {
           const result = await aiAPI.suggestHabits();
-          if (result.success) {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: result.data.suggestions,
-              timestamp: new Date()
-            }]);
-          } else {
-            setMessages(prev => [...prev, {
-              role: 'assistant',
-              content: result.message || 'Failed to suggest habits. Please try again.',
-              timestamp: new Date()
-            }]);
-          }
-        } catch (error) {
+          const content = result?.success && result?.data?.suggestions
+            ? result.data.suggestions
+            : (result?.message || 'Could not suggest habits right now.');
+          setMessages(prev => [...prev, { role: 'assistant', content, timestamp: new Date() }]);
+        } catch {
           setMessages(prev => [...prev, {
             role: 'assistant',
             content: '❌ Failed to suggest habits. Please try again.',
@@ -369,21 +328,21 @@ export default function AIChat() {
               Try asking about:
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {prompts.slice(0, 4).map((prompt) => (
+              {prompts.slice(0, 4).map((p, idx) => (
                 <button
-                  key={prompt.id}
-                  onClick={() => handleSend(prompt.prompt)}
+                  key={p.id ?? idx}
+                  onClick={() => handleSend(p.prompt || p.title || '')}
                   disabled={loading}
                   className="card-hover p-4 text-left"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{prompt.title.split(' ')[0]}</span>
+                    <span className="text-2xl">{typeof p.title === 'string' && p.title.trim() ? p.title.trim().split(/\s/)[0] : '✨'}</span>
                     <div>
                       <h4 className="font-bold text-gray-800 dark:text-gray-200 text-sm">
-                        {prompt.title.substring(2)}
+                        {typeof p.title === 'string' ? p.title.replace(/^[\s\S]{0,2}/, '').trim() || p.title : (p.description || 'Ask')}
                       </h4>
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        {prompt.description}
+                        {p.description || ''}
                       </p>
                     </div>
                   </div>
@@ -394,6 +353,7 @@ export default function AIChat() {
         )}
 
       </div>
+      <BottomNav />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { entryAPI } from '../utils/api';
 import { showToast } from '../utils/toast';
+import Navbar from '../components/Navbar';
 import BottomNav from '../components/BottomNav';
 import {
   BookOpen,
@@ -66,7 +67,9 @@ export default function Entries() {
     setLoading(true);
     const result = await entryAPI.getAll();
     if (result.success) {
-      setEntries(result.data);
+      // Backend returns { entries: [...], pagination: {...} } inside data
+      const entriesArray = Array.isArray(result.data) ? result.data : (result.data?.entries || []);
+      setEntries(entriesArray);
     } else {
       showToast.error('Failed to load entries');
     }
@@ -160,7 +163,9 @@ export default function Entries() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      <Navbar />
+      <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
@@ -413,6 +418,7 @@ export default function Entries() {
 
       </div>
 
+      </div>
       <BottomNav />
     </div>
   );

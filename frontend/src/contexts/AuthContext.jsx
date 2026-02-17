@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
   // Register function
   const register = async (name, email, password) => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,11 +63,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Update user in state and localStorage (e.g. after profile update)
+  const updateUser = (userData) => {
+    if (!userData) return;
+    setUser(userData);
+    try {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (_) {}
+  };
+
   const value = {
     user,
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated: !!user
   };
 

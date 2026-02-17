@@ -4,7 +4,7 @@ import { Lock, ArrowLeft, Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react
 import axios from 'axios';
 import { showToast } from '../utils/toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export default function ResetPassword() {
   const { token } = useParams();

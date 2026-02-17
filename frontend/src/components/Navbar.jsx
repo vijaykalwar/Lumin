@@ -15,7 +15,8 @@ import {
   X,
   Sun,
   Moon,
-  Flame
+  Flame,
+  Brain
 } from 'lucide-react';
 
 // ✨ Unique LUMIN Logo Component
@@ -58,6 +59,7 @@ export default function Navbar() {
     { to: '/goals', icon: Target, label: 'Goals' },
     { to: '/entries', icon: Heart, label: 'Journal' },
     { to: '/analytics', icon: Eye, label: 'Vision' },
+    { to: '/ai-chat', icon: Brain, label: 'AI Coach' },
     { to: '/community', icon: Users, label: 'Social' },
     { to: '/pomodoro', icon: Clock, label: 'Focus' }
   ];

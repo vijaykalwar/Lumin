@@ -11,8 +11,7 @@ const emailService = require('../services/emailService');
 const JWT_EXPIRES_IN = '7d'; // Access token - shorter for security
 const REFRESH_EXPIRES_IN = '30d';
 const SALT_ROUNDS = 12;
-const MIN_PASSWORD_LENGTH = 8;
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+const MIN_PASSWORD_LENGTH = 6;
 
 // Generate access JWT token
 const generateToken = (userId) => {
@@ -52,6 +51,7 @@ const formatUserResponse = (user) => ({
 // 📝 REGISTER - Create new user
 // ============================================
 exports.register = async (req, res) => {
+
   try {
     const { name, email, password } = req.body;
 
@@ -78,12 +78,6 @@ exports.register = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
-      });
-    }
-    if (!PASSWORD_REGEX.test(password)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       });
     }
 
@@ -122,6 +116,7 @@ exports.register = async (req, res) => {
     // ✅ Log successful registration
     console.log(`[AUTH] New user registered: ${user.email}`);
 
+
     res.status(201).json({
       success: true,
       message: 'Account created successfully!',
@@ -131,6 +126,7 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
+
     console.error('[AUTH] Register error:', error);
     
     // Handle MongoDB duplicate key error
@@ -153,6 +149,7 @@ exports.register = async (req, res) => {
 // 🔑 LOGIN - Authenticate user
 // ============================================
 exports.login = async (req, res) => {
+
   try {
     const { email, password } = req.body;
 
@@ -195,6 +192,7 @@ exports.login = async (req, res) => {
     // ✅ Log successful login
     console.log(`[AUTH] User logged in: ${user.email}`);
 
+
     res.json({
       success: true,
       message: 'Login successful!',
@@ -204,6 +202,7 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
+
     console.error('[AUTH] Login error:', error);
     res.status(500).json({
       success: false,

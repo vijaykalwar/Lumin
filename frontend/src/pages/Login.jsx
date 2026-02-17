@@ -38,7 +38,6 @@ function Login() {
 
     try {
       const result = await authAPI.login(email, password);
-      
       if (result.success) {
         login(result.token, result.user, result.refreshToken);
         showToast.success(`Welcome back, ${result.user.name}! 👋`);
@@ -103,12 +102,15 @@ function Login() {
               />
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center space-x-2 text-gray-400 cursor-pointer">
+            <div className="flex items-center justify-between text-sm gap-3">
+              <label className="flex items-center space-x-2 text-gray-400 cursor-pointer shrink-0">
                 <input type="checkbox" className="rounded" />
                 <span>Remember me</span>
               </label>
-              <Link to="/forgot-password" className="text-primary-400 hover:text-primary-300 transition">
+              <Link
+                to="/forgot-password"
+                className="text-primary-400 hover:text-primary-300 transition cursor-pointer py-2 px-1 -my-1 relative z-10 min-h-[44px] flex items-center justify-end touch-manipulation"
+              >
                 Forgot password?
               </Link>
             </div>

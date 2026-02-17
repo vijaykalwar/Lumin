@@ -62,7 +62,8 @@ const MoodPicker = ({ onMoodSelect }) => {
       {/* Quick Entry Button (shows after selection) */}
       {selectedMood && (
         <Link
-          to="/journal"
+          to="/add-entry"
+          state={{ selectedMood: moods.find((m) => m.id === selectedMood) }}
           className="block w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl text-center hover:opacity-90 transition-opacity animate-fadeIn"
         >
           Quick Entry →

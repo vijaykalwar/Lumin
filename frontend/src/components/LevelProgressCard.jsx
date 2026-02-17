@@ -10,26 +10,28 @@ import { Zap } from 'lucide-react';
  * - Level 5: 506 XP
  * - Level 10: 3,844 XP
  */
-const LevelProgressCard = ({ level = 1, currentXP = 0, totalXP = 0 }) => {
-  // Calculate XP needed for current level
-  const calculateXPForLevel = (lvl) => {
-    return Math.floor(100 * Math.pow(1.5, lvl - 1));
-  };
+// XP Formula: floor(100 * 1.5^(level-1)) per level. Level 1: 100, Level 2: 150, Level 5: 506, Level 10: 3844
+const calculateXPForLevel = (lvl) => Math.floor(100 * Math.pow(1.5, lvl - 1));
 
-  // Calculate current level's XP requirement
-  const currentLevelXP = calculateXPForLevel(level);
-  const nextLevelXP = calculateXPForLevel(level + 1);
-  
-  // Calculate XP earned in current level
-  const xpInCurrentLevel = currentXP - (totalXP - currentLevelXP);
-  const xpNeededForLevel = nextLevelXP - currentLevelXP;
-  const remainingXP = xpNeededForLevel - xpInCurrentLevel;
-  
-  // Calculate percentage for progress bar
-  const progressPercentage = Math.min(
-    (xpInCurrentLevel / xpNeededForLevel) * 100,
-    100
-  );
+// Total XP required to reach level L (sum of XP for levels 1..L-1)
+const xpToReachLevel = (lvl) => {
+  if (lvl <= 1) return 0;
+  let sum = 0;
+  for (let i = 1; i < lvl; i++) sum += calculateXPForLevel(i);
+  return sum;
+};
+
+const LevelProgressCard = ({ level = 1, currentXP = 0, totalXP }) => {
+  const total = totalXP ?? currentXP;
+  const xpNeededForCurrentLevel = calculateXPForLevel(level);
+  const xpAtStartOfLevel = xpToReachLevel(level);
+  const xpInCurrentLevel = Math.max(0, total - xpAtStartOfLevel);
+  const xpNeededForLevel = xpNeededForCurrentLevel;
+  const remainingXP = Math.max(0, xpNeededForCurrentLevel - xpInCurrentLevel);
+
+  const progressPercentage = xpNeededForLevel > 0
+    ? Math.min((xpInCurrentLevel / xpNeededForLevel) * 100, 100)
+    : 0;
 
   return (
     <div className="card-glass p-6 space-y-4 animate-fadeIn">

@@ -166,10 +166,6 @@ export const entryAPI = {
 
 export const authAPI = {
   register: async (name, email, password) => {
-    // #region agent log
-    const _url = `${API_BASE_URL}/auth/register`;
-    fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.register',message:'register request',data:{url:_url,hasName:!!name,hasEmail:!!email,passwordLen:password?.length},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     try {
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/auth/register`,
@@ -181,23 +177,16 @@ export const authAPI = {
         API_TIMEOUT
       );
       const data = await response.json();
-      // #region agent log
-      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.register',message:'register response',data:{status:response.status,success:data.success,message:data.message,hasToken:!!data.token,hasUser:!!data.user},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
+
       return data;
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.register',message:'register catch',data:{errorName:error?.name,errorMessage:error?.message},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+
       return { success: false, message: error.message };
     }
   },
 
   login: async (email, password) => {
-    // #region agent log
-    const _url = `${API_BASE_URL}/auth/login`;
-    fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.login',message:'login request',data:{url:_url,hasEmail:!!email,passwordLen:password?.length},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+
     try {
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/auth/login`,
@@ -209,14 +198,10 @@ export const authAPI = {
         API_TIMEOUT
       );
       const data = await response.json();
-      // #region agent log
-      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.login',message:'login response',data:{status:response.status,success:data.success,message:data.message,hasToken:!!data.token,hasUser:!!data.user},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
+
       return data;
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7246/ingest/dc221352-aebf-413f-ac0c-faefc59cb41b',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api.js:authAPI.login',message:'login catch',data:{errorName:error?.name,errorMessage:error?.message},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
+
       return { success: false, message: error.message };
     }
   },

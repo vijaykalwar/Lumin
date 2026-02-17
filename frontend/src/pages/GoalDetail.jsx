@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { goalsAPI } from '../utils/api';
 import { ArrowLeft, TrendingUp, Calendar, Award, CheckCircle, Circle } from 'lucide-react';
 import { showToast } from '../utils/toast';
@@ -268,6 +269,7 @@ function GoalDetail() {
       </div>
     )}
   </div>
+  <BottomNav />
 </div>
 );
 }

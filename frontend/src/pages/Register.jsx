@@ -44,7 +44,6 @@ function Register() {
 
     try {
       const result = await authAPI.register(name, email, password);
-      
       if (result.success) {
         login(result.token, result.user, result.refreshToken);
         showToast.success('🎉 Welcome to LUMIN! Let\'s start your journey!');

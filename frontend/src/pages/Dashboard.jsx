@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import BottomNav from '../components/BottomNav';
 import { statsAPI, goalsAPI } from '../utils/api';
-import { Target, BookOpen, Plus } from 'lucide-react';
+import { Target, BookOpen, Plus, ChevronRight, Zap } from 'lucide-react';
 import { showToast } from '../utils/toast';
 import React from 'react';
 
@@ -30,30 +30,55 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Try to load from cache first
     const cached = localStorage.getItem('dashboardCache');
     if (cached) {
       try {
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 300000) { // 5 min cache
+        if (Date.now() - timestamp < 300000) {
           setDashboardData(data);
           setLoading(false);
           fetchGoalsOnly();
+          fetchDashboardDataInBackground();
           return;
         }
-      } catch (e) {
-        console.error('Cache parse error:', e);
-      }
+      } catch (_) {}
     }
     fetchDashboardData();
   }, []);
 
-  // Auto-refresh every 30 seconds
+  const fetchDashboardDataInBackground = async () => {
+    const [dashResult, weeklyResult, goalsRes] = await Promise.all([
+      statsAPI.getDashboard(),
+      statsAPI.getWeeklyActivity(),
+      goalsAPI.getAll({ status: 'active', limit: 10 })
+    ]);
+    if (dashResult.success) {
+      setDashboardData(dashResult.data);
+      localStorage.setItem('dashboardCache', JSON.stringify({ data: dashResult.data, timestamp: Date.now() }));
+    }
+    if (weeklyResult.success) {
+      const normalized = (weeklyResult.data || []).map((d) => ({
+        date: d.date || d._id,
+        journal_entries_count: d.entries ?? d.journal_entries_count ?? 0,
+        focus_minutes: d.focus_minutes ?? 0
+      }));
+      setWeeklyActivity(normalized);
+    }
+    if (goalsRes.success && goalsRes.data?.goals) setActiveGoals(goalsRes.data.goals);
+    else if (goalsRes.success && Array.isArray(goalsRes.data)) setActiveGoals(goalsRes.data);
+  };
+
+  // Refresh every 60s when tab visible (saves requests when tab in background)
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchDashboardData();
-    }, 30000);
-    return () => clearInterval(interval);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') fetchGoalsOnly();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    const interval = setInterval(fetchDashboardDataInBackground, 60000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchGoalsOnly = async () => {
@@ -77,7 +102,15 @@ function Dashboard() {
         timestamp: Date.now()
       }));
     }
-    if (weeklyResult.success) setWeeklyActivity(weeklyResult.data);
+    if (weeklyResult.success) {
+      // Backend returns [{ _id: 'YYYY-MM-DD', entries, totalXP }] - normalize for chart
+      const normalized = (weeklyResult.data || []).map((d) => ({
+        date: d.date || d._id,
+        journal_entries_count: d.entries ?? d.journal_entries_count ?? 0,
+        focus_minutes: d.focus_minutes ?? 0
+      }));
+      setWeeklyActivity(normalized);
+    }
     if (goalsRes.success && goalsRes.data?.goals) setActiveGoals(goalsRes.data.goals);
     else if (goalsRes.success && Array.isArray(goalsRes.data)) setActiveGoals(goalsRes.data);
 
@@ -105,34 +138,39 @@ function Dashboard() {
 
   const handleMoodSelect = (mood) => {
     showToast.success(`Mood selected: ${mood.label}`);
-    // Navigate to journal with mood pre-selected
-    navigate('/journal', { state: { selectedMood: mood.id } });
+    navigate('/add-entry', { state: { selectedMood: mood } });
   };
 
-  // Loading State
+  // Loading State - skeleton matches layout for faster perceived load
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navbar />
         <div className="pt-20 pb-24 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto animate-pulse space-y-6">
-            <div className="h-12 w-64 bg-gray-200 dark:bg-gray-800 rounded-xl" />
-            <div className="grid lg:grid-cols-[2fr_1fr] gap-6">
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-48 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
-                  />
-                ))}
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="animate-pulse space-y-3">
+              <div className="h-10 w-72 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+              <div className="h-5 w-48 bg-gray-200 dark:bg-gray-800 rounded" />
+              <div className="flex gap-3 mt-4">
+                <div className="h-12 w-36 bg-gray-200 dark:bg-gray-800 rounded-xl" />
+                <div className="h-12 w-28 bg-gray-200 dark:bg-gray-800 rounded-xl" />
               </div>
-              <div className="space-y-4">
-                {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-64 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
-                  />
-                ))}
+            </div>
+            <div className="grid lg:grid-cols-[2fr_1fr] gap-6">
+              <div className="space-y-6">
+                <div className="h-40 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 animate-pulse" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-28 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 animate-pulse" />
+                  ))}
+                </div>
+                <div className="h-52 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 animate-pulse" />
+                <div className="h-44 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 animate-pulse" />
+              </div>
+              <div className="space-y-6">
+                <div className="h-48 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 animate-pulse" />
+                <div className="h-56 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 animate-pulse" />
+                <div className="h-36 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 animate-pulse" />
               </div>
             </div>
           </div>
@@ -141,15 +179,13 @@ function Dashboard() {
     );
   }
 
-  // Extract data
   const userData = dashboardData?.user || user;
   const statsOverview = dashboardData?.stats || {};
   const recentEntries = dashboardData?.recentEntries || [];
 
-  // Calculate stats
   const level = userData?.level || 1;
   const currentXP = userData?.xp || 0;
-  const totalXP = userData?.totalXP || currentXP;
+  const totalXP = userData?.totalXP ?? currentXP;
   const currentStreak = userData?.streak || 0;
   const bestStreak = userData?.bestStreak || currentStreak;
   const totalEntries = statsOverview?.totalEntries || 0;
@@ -159,7 +195,7 @@ function Dashboard() {
   const displayName = userData?.name || user?.name || 'there';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950" style={{ contentVisibility: 'auto' }}>
       <Navbar />
 
       <div className="pt-20 pb-24 px-4 sm:px-6 lg:px-8">
@@ -178,13 +214,14 @@ function Dashboard() {
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/goals"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg hover:shadow-purple-500/25 group"
               >
                 <Plus className="w-4 h-4" />
-                Create Goal
+                <span>Create Goal</span>
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link
-                to="/journal"
+                to="/entries"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-semibold rounded-xl hover:border-purple-500 dark:hover:border-purple-500 transition-colors"
               >
                 <BookOpen className="w-4 h-4" />
@@ -216,6 +253,30 @@ function Dashboard() {
 
               {/* 3. Weekly Activity Chart */}
               <WeeklyActivityChart weeklyData={weeklyActivity} />
+
+              {/* 3b. Today's Focus (Micro Goals - local only) */}
+              {activeGoals.length > 0 && (
+                <div className="card-glass p-5 space-y-3 animate-fadeIn">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-500" />
+                    Today&apos;s Focus
+                  </h3>
+                  <ul className="space-y-2">
+                    {activeGoals.slice(0, 3).map((g) => {
+                      const progress = g.progressPercentage ?? (g.targetValue > 0 ? Math.min(100, Math.round((Number(g.currentValue) || 0) / Number(g.targetValue) * 100)) : 0);
+                      const nextStep = progress < 25 ? 25 : progress < 50 ? 50 : progress < 75 ? 75 : 100;
+                      const label = nextStep <= progress ? 'Complete' : `Reach ${nextStep}%`;
+                      return (
+                        <li key={g._id} className="flex items-center gap-2 text-sm">
+                          <span className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0" />
+                          <span className="text-gray-700 dark:text-gray-300 truncate flex-1">{g.title}</span>
+                          <span className="text-purple-500 font-medium flex-shrink-0">{label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
 
               {/* 4. Active Goals */}
               <div className="card-glass p-6 space-y-4 animate-fadeIn">
@@ -285,7 +346,7 @@ function Dashboard() {
                     {recentEntries.slice(0, 2).map((entry) => (
                       <Link
                         key={entry._id}
-                        to={`/entries/${entry._id}`}
+                        to="/entries"
                         className="block p-3 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                       >
                         <div className="flex items-center gap-3">
