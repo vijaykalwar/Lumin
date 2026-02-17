@@ -31,19 +31,46 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // ✅ Immediately activate new service worker (no waiting)
+        skipWaiting: true,
+        clientsClaim: true,
+
+        // ✅ Auto-delete old caches when new version deploys
+        cleanupOutdatedCaches: true,
+
+        // ✅ Cache static assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+
+        // ✅ SPA navigation fallback
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\./i,
+            // API calls — always try network first, fallback to cache
+            urlPattern: /^https:\/\/.*\/api\//i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxAgeSeconds: 60 * 60 // 1 hour (reduced from 24h)
               },
               cacheableResponse: {
                 statuses: [0, 200]
+              },
+              networkTimeoutSeconds: 10
+            }
+          },
+          {
+            // Google Fonts
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               }
             }
           }
