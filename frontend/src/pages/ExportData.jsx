@@ -1,6 +1,8 @@
 import { Download, FileJson, FileText, Package } from 'lucide-react';
 import axios from 'axios';
 import { showToast } from '../utils/toast';
+import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -102,7 +104,9 @@ export default function ExportData() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      <Navbar />
+      <div className="p-4 sm:p-6 lg:p-8 pb-24">
       <div className="max-w-4xl mx-auto">
         
         {/* Header */}
@@ -176,6 +180,8 @@ export default function ExportData() {
           </p>
         </div>
       </div>
+      </div>
+      <BottomNav />
     </div>
   );
 }

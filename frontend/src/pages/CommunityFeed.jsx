@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { postsAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Heart, Flame, ThumbsUp, Dumbbell, Star, MessageCircle, Send, Trash2, Filter } from 'lucide-react';
@@ -289,6 +290,7 @@ function CommunityFeed() {
           </div>
         </div>
       )}
+      <BottomNav />
     </div>
   );
 }

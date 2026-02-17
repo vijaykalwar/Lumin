@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { teamsAPI, postsAPI } from '../utils/api';
 import { ArrowLeft, Users, Trophy, Crown, Copy, LogOut, MessageCircle, Send } from 'lucide-react';
 import { showToast } from '../utils/toast';
@@ -332,6 +333,7 @@ function TeamDetail() {
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   );
 }

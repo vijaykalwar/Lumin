@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { teamsAPI } from '../utils/api';
 import { Users, Plus, LogIn, Copy, Crown, Trophy, TrendingUp } from 'lucide-react';
 import { showToast } from '../utils/toast';
@@ -322,6 +323,7 @@ function Teams() {
           </div>
         </div>
       )}
+      <BottomNav />
     </div>
   );
 }

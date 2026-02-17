@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import BottomNav from '../components/BottomNav';
 import { pomodoroAPI } from '../utils/api';
 import { Play, Pause, RotateCcw, Coffee, Brain, Clock, TrendingUp } from 'lucide-react';
 import { showToast } from '../utils/toast';
@@ -470,6 +471,7 @@ function PomodoroTimer() {
           </div>
         </div>
       )}
+      <BottomNav />
     </div>
   );
 }
