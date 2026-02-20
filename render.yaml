@@ -20,3 +20,5 @@ services:
         sync: false
       - key: EMAIL_PASSWORD
         sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

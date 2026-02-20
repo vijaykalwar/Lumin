@@ -43,18 +43,24 @@ export default defineConfig({
 
         // ✅ SPA navigation fallback
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        // Exclude /api/ paths AND absolute localhost API calls from SW navigation fallback
+        navigateFallbackDenylist: [/^\/api\//, /localhost/],
 
         runtimeCaching: [
           {
-            // API calls — always try network first, fallback to cache
-            urlPattern: /^https:\/\/.*\/api\//i,
+            // ✅ Auth routes — NEVER cache, always fresh network request
+            urlPattern: /\/api\/auth\//i,
+            handler: 'NetworkOnly',
+          },
+          {
+            // API calls (http & https) — always try network first, fallback to cache
+            urlPattern: /\/api\//i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 // 1 hour (reduced from 24h)
+                maxAgeSeconds: 60 * 60 // 1 hour
               },
               cacheableResponse: {
                 statuses: [0, 200]

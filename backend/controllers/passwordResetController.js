@@ -47,7 +47,7 @@ exports.forgotPassword = async (req, res) => {
 
     // ========== SEND EMAIL ==========
     // Use CORS_ORIGIN (already set) or FRONTEND_URL, with localhost fallback for development
-    const frontendUrl = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'https://lumin-app.vercel.app';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
     
     try {
