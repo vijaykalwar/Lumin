@@ -4,8 +4,9 @@
 
 // IMPORTANT: Must match Vercel env var name!
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-const API_TIMEOUT = 10000; // 10 seconds
-const AI_TIMEOUT = 18000; // 18 seconds for AI (avoid slow hang)
+const API_TIMEOUT = 30000;  // 30s — handles Render free tier cold start
+const AUTH_TIMEOUT = 35000; // 35s — login/register on first hit after sleep
+const AI_TIMEOUT = 18000;   // 18s for AI
 
 console.log('🌐 API Base URL:', API_BASE_URL);
 
@@ -195,7 +196,7 @@ export const authAPI = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         },
-        API_TIMEOUT
+        AUTH_TIMEOUT
       );
       const data = await response.json();
 

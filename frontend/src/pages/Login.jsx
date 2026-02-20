@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../utils/api';
 import { showToast } from '../utils/toast';
+
+// Backend base URL for wake-up ping (strip /api suffix)
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -15,6 +18,12 @@ function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // 🔥 Wake up Render backend the moment Login page loads
+  // Render free tier sleeps after 15min — pre-warming means login is fast
+  useEffect(() => {
+    fetch(`${API_BASE}/`, { method: 'GET', mode: 'cors' }).catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
