@@ -845,6 +845,21 @@ export const profileAPI = {
       console.error('Upload avatar error:', error);
       return { success: false, message: error.message };
     }
+  },
+
+  /**
+   * Delete account — permanently removes user and all their data
+   */
+  deleteAccount: async (password) => {
+    try {
+      const response = await authenticatedFetch(`${API_BASE_URL}/profile/account`, {
+        method: 'DELETE',
+        body: JSON.stringify({ password }),
+      });
+      return await response.json();
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
   }
 };
 

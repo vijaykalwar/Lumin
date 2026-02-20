@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { profileAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import {User,Mail,MapPin,Briefcase,Calendar,Edit2,
-  Save, X,Lock, Settings,Trophy,TrendingUp,Target,Clock,Award, Loader2} from 'lucide-react';
+  Save, X,Lock, Settings,Trophy,TrendingUp,Target,Clock,Award, Loader2, Trash2, AlertTriangle} from 'lucide-react';
 import { showToast } from '../utils/toast';
 import Navbar from '../components/Navbar';
 import BottomNav from '../components/BottomNav';
 
 export default function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +39,11 @@ export default function Profile() {
   });
 
   const [saveLoading, setSaveLoading] = useState(false);
+
+  // Delete account modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Load profile and stats
   useEffect(() => {
@@ -156,6 +161,26 @@ const handleSaveProfile = async () => {
       showToast.error(result.message || 'Failed to upload avatar');
     }
     setSaveLoading(false);
+  };
+
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      showToast.error('Please enter your password to confirm deletion');
+      return;
+    }
+    setDeleteLoading(true);
+    const result = await profileAPI.deleteAccount(deletePassword);
+    if (result.success) {
+      showToast.success('Account deleted. Goodbye! 👋');
+      setShowDeleteModal(false);
+      // Clear auth and redirect to login
+      if (logout) logout();
+      setTimeout(() => { window.location.href = '/login'; }, 1200);
+    } else {
+      showToast.error(result.message || 'Failed to delete account');
+    }
+    setDeleteLoading(false);
   };
 
   if (loading) {
@@ -637,11 +662,82 @@ const handleSaveProfile = async () => {
           </button>
 
         </form>
+
+        {/* Danger Zone — Delete Account */}
+        <div className="mt-10 border border-red-300 dark:border-red-800 rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-5 h-5" />
+            Danger Zone
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Once you delete your account, there is no going back. All your data — entries, goals, and settings — will be permanently removed.
+          </p>
+          <button
+            onClick={() => { setDeletePassword(''); setShowDeleteModal(true); }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-medium"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete My Account
+          </button>
+        </div>
       </div>
     )}
 
   </div>
 </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fadeIn">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">Delete Account</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              This action is <strong>permanent and irreversible</strong>. All your data — journal entries, goals, and settings — will be deleted forever.
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Enter your password to confirm:
+            </p>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Enter your password"
+              autoFocus
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-400 mb-4 text-gray-800 dark:text-white"
+              onKeyDown={(e) => e.key === 'Enter' && handleDeleteAccount()}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading || !deletePassword}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-medium disabled:opacity-50"
+              >
+                {deleteLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete Forever
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <BottomNav />
       </div>
 );

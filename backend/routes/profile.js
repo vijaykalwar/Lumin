@@ -8,7 +8,8 @@ const {
   updateSettings,
   changePassword,
   getStats,
-  uploadAvatar
+  uploadAvatar,
+  deleteAccount
 } = require('../controllers/profileController');
 
 // Configure multer for memory storage
@@ -47,5 +48,8 @@ router.put('/password', changePassword);
 
 // GET /api/profile/stats - Get user stats
 router.get('/stats', getStats);
+
+// DELETE /api/profile/account - Delete account and all user data
+router.delete('/account', deleteAccount);
 
 module.exports = router;

@@ -4,6 +4,13 @@ const bcrypt = require('bcryptjs');
 const cloudinary = require('../config/cloudinary');
 const { Readable } = require('stream');
 
+// Lazy-load models to avoid circular dependency issues
+function getModels() {
+  const Entry = require('../models/Entry');
+  const Goal = require('../models/Goal');
+  return { Entry, Goal };
+}
+
 /**
  * Helper: remove sensitive fields before sending user to client
  */
@@ -286,11 +293,62 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+/**
+ * DELETE ACCOUNT
+ * Permanently deletes the user and all their data.
+ * Requires password confirmation.
+ */
+const deleteAccount = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ success: false, message: 'Password is required to confirm account deletion' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Verify password before deleting
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Incorrect password' });
+    }
+
+    const userId = req.user._id;
+
+    // Delete all user data across collections (best effort)
+    try {
+      const { Entry, Goal } = getModels();
+      await Promise.all([
+        Entry.deleteMany({ user: userId }),
+        Goal.deleteMany({ user: userId }),
+      ]);
+    } catch (cleanupErr) {
+      console.warn('Partial data cleanup error (non-fatal):', cleanupErr.message);
+    }
+
+    // Finally delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (err) {
+    console.error('deleteAccount error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
   updateSettings,
   changePassword,
   getStats,
-  uploadAvatar
+  uploadAvatar,
+  deleteAccount
 };
