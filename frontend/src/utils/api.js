@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════════════════════
 
 // IMPORTANT: Must match Vercel env var name!
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lumin-af16.onrender.com/api';
 const API_TIMEOUT = 30000;  // 30s — handles Render free tier cold start
 const AUTH_TIMEOUT = 35000; // 35s — login/register on first hit after sleep
 const AI_TIMEOUT = 18000;   // 18s for AI
