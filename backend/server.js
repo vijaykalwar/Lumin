@@ -61,7 +61,7 @@ if (process.env.NODE_ENV === 'production') {
   
   if (allowedOrigins.length === 0) {
     console.warn('⚠️  WARNING: No ALLOWED_ORIGINS set in production. Using default origin.');
-    corsOptions.origin = process.env.FRONTEND_URL || 'http://localhost:3000';
+    corsOptions.origin = process.env.FRONTEND_URL || 'http://localhost:5173';
   } else {
     corsOptions.origin = (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
@@ -189,6 +189,11 @@ const PORT = process.env.PORT || 5000;
 // ════════════════════════════════════════════════════════════
 // ROUTES
 // ════════════════════════════════════════════════════════════
+
+// Health check — used by frontend wake-up ping (no rate limit, instant response)
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: Date.now() });
+});
 
 // Auth routes (with stricter rate limiting)
 app.use("/api/auth/login", authLimiter);

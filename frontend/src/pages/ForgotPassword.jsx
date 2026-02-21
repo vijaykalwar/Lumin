@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
-import axios from 'axios';
 import { showToast } from '../utils/toast';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE = API_URL.replace('/api', '');
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+
+  // Wake up Render backend as soon as page loads
+  useEffect(() => {
+    fetch(`${API_URL}/health`, { method: 'GET' }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,14 +27,32 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      // Use fetch with 35s timeout (handles Render cold start)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 35000);
 
-      if (response.data.success) {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      if (data.success) {
         setEmailSent(true);
         showToast.success('Password reset link sent! Check your email.');
+      } else {
+        showToast.error(data.message || 'Failed to send reset email');
       }
     } catch (error) {
-      showToast.error(error.response?.data?.message || 'Failed to send reset email');
+      if (error.name === 'AbortError') {
+        showToast.error('Server is waking up, please try again in 10 seconds.');
+      } else {
+        showToast.error('Network error. Please check your connection.');
+      }
     } finally {
       setLoading(false);
     }

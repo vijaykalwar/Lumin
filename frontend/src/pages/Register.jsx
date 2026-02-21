@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../utils/api';
 import { showToast } from '../utils/toast';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -16,6 +18,11 @@ function Register() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Wake up Render backend when Register page loads
+  useEffect(() => {
+    fetch(`${API_BASE}/api/health`, { method: 'GET' }).catch(() => {});
+  }, []);
 
   const handleChange = (e) => {
     setFormData({

@@ -22,7 +22,7 @@ function Login() {
   // 🔥 Wake up Render backend the moment Login page loads
   // Render free tier sleeps after 15min — pre-warming means login is fast
   useEffect(() => {
-    fetch(`${API_BASE}/`, { method: 'GET', mode: 'cors' }).catch(() => {});
+    fetch(`${API_BASE}/api/health`, { method: 'GET' }).catch(() => {});
   }, []);
 
   const handleChange = (e) => {
