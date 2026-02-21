@@ -37,6 +37,10 @@ connectDB();
 
 const app = express();
 
+// ✅ Trust proxy - Required for Render/Heroku/Vercel reverse proxy
+// Without this, express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+app.set('trust proxy', 1);
+
 // ════════════════════════════════════════════════════════════
 // SECURITY MIDDLEWARE
 // ════════════════════════════════════════════════════════════
@@ -162,6 +166,11 @@ const exportLimiter = rateLimit({
   },
 });
 
+// ✅ Health check BEFORE rate limiter (no rate limit, instant response for Render)
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: Date.now() });
+});
+
 // Apply general rate limiter to all requests
 app.use("/api/", generalLimiter);
 
@@ -186,10 +195,7 @@ const PORT = process.env.PORT || 5000;
 // ROUTES
 // ════════════════════════════════════════════════════════════
 
-// Health check — used by frontend wake-up ping (no rate limit, instant response)
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: Date.now() });
-});
+// (Health check moved above rate limiter — see line ~168)
 
 // Auth routes (with stricter rate limiting)
 app.use("/api/auth/login", authLimiter);
