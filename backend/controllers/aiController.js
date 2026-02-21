@@ -18,27 +18,35 @@ const genAI = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
 
-// ✅ OPTIMIZED: Single model instance with faster config
+// ✅ Backend timeout wrapper for Gemini API calls
+const withTimeout = (promise, ms = 50000) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('AI response timed out. Please try again.')), ms)
+    )
+  ]);
+
+// ✅ Model with primary + fallback
 const getModel = () => {
   if (!genAI) {
     throw new Error('Gemini AI not configured. Please set GEMINI_API_KEY environment variable.');
   }
-  
+  // Try gemini-2.5-flash-lite first, fall back to gemini-1.5-flash
   try {
-    return genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash-lite',  // ✅ Original model name
+    return genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash-lite',
       generationConfig: {
-        maxOutputTokens: 500,     // Increased for better responses
-        temperature: 0.7,         // Balanced creativity
-        topP: 0.8,                // Focused responses
+        maxOutputTokens: 500,
+        temperature: 0.7,
+        topP: 0.8,
         topK: 40
       }
     });
   } catch (error) {
-    // If model doesn't exist, try fallback
-    console.warn('⚠️ Model gemini-2.5-flash-lite not available, trying fallback:', error.message);
-    return genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',  // Fallback model
+    console.warn('⚠️ gemini-2.5-flash-lite not available, using fallback:', error.message);
+    return genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
       generationConfig: {
         maxOutputTokens: 500,
         temperature: 0.7,
@@ -48,6 +56,8 @@ const getModel = () => {
     });
   }
 };
+
+
 
 
 // ═══════════════════════════════════════════════════════════
@@ -108,7 +118,7 @@ exports.analyzeMood = async (req, res) => {
     const prompt = `Mood analysis for: ${JSON.stringify(recentEntries.map(e => e.mood))}. Give: 1) Pattern 2) 2 tips. Max 100 words.`;
 
     const model = getModel();
-    const result = await model.generateContent(prompt);
+    const result = await withTimeout(model.generateContent(prompt));
     const analysis = result.response.text();
 
     const responseData = { analysis, entriesAnalyzed: recentEntries.length };
@@ -163,7 +173,7 @@ exports.planGoal = async (req, res) => {
     const prompt = `Create SMART goal for: "${goalIdea}". Format: Title, Metric, 3 Milestones, 2 Action Steps. Max 150 words.`;
 
     const model = getModel();
-    const result = await model.generateContent(prompt);
+    const result = await withTimeout(model.generateContent(prompt));
     const plan = result.response.text();
 
     res.status(200).json({ success: true, data: { plan, originalIdea: goalIdea } });
@@ -223,7 +233,7 @@ exports.suggestHabits = async (req, res) => {
     const prompt = `Suggest 3 habits for goals: ${goals.map(g => g.title).join(', ') || 'general improvement'}. Format: Habit + Why + How. Max 100 words.`;
 
     const model = getModel();
-    const result = await model.generateContent(prompt);
+    const result = await withTimeout(model.generateContent(prompt));
     const suggestions = result.response.text();
 
     const responseData = { suggestions, basedOn: { goalsCount: goals.length } };
@@ -274,7 +284,7 @@ exports.getMotivation = async (req, res) => {
     const prompt = `Motivate ${user.name} (Level ${user.level}, ${user.streak} day streak). 80 words max. Be energizing!`;
 
     const model = getModel();
-    const result = await model.generateContent(prompt);
+    const result = await withTimeout(model.generateContent(prompt));
     const motivation = result.response.text();
 
     res.status(200).json({
@@ -351,7 +361,7 @@ User: ${message}
 Reply in 100-150 words. Be warm, actionable, use emojis.`;
 
     const model = getModel();
-    const result = await model.generateContent(prompt);
+    const result = await withTimeout(model.generateContent(prompt));
     const response = result.response.text();
 
     res.status(200).json({

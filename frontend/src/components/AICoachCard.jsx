@@ -1,16 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, ArrowRight } from 'lucide-react';
 
 /**
  * AI Coach Card Component
- * Displays AI coach section with glowing animated border
- * Currently disabled with "Coming Soon" label
- * 
- * @param {number} streak - Current user streak for dynamic messaging
+ * Entire card is clickable and navigates to /ai-chat
  */
 const AICoachCard = ({ streak = 0 }) => {
-  // Dynamic message based on streak
+  const navigate = useNavigate();
+
   const getMessage = () => {
     if (streak > 7) {
       return "You're showing incredible dedication! Your consistency is impressive. Keep up the amazing work!";
@@ -24,23 +22,29 @@ const AICoachCard = ({ streak = 0 }) => {
   const message = getMessage();
 
   return (
-    <div className="card-glass animated-border p-6 space-y-4 animate-fadeIn relative overflow-hidden">
+    <div
+      onClick={() => navigate('/ai-chat')}
+      className="card-glass animated-border p-6 space-y-4 animate-fadeIn relative overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform duration-200 group"
+    >
       {/* Glowing Background Effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-cyan-500/5 -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-cyan-500/5 -z-10 group-hover:from-purple-500/10 group-hover:via-pink-500/10 group-hover:to-cyan-500/10 transition-all duration-200" />
 
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-xl shadow-lg">
-          <Sparkles className="w-6 h-6 text-white" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 rounded-xl shadow-lg">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              AI Coach
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Get personalized advice
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            AI Coach
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Get personalized advice
-          </p>
-        </div>
+        <ArrowRight className="w-5 h-5 text-purple-500 group-hover:translate-x-1 transition-transform duration-200" />
       </div>
 
       {/* Quote Box */}
@@ -50,16 +54,13 @@ const AICoachCard = ({ streak = 0 }) => {
         </p>
       </div>
 
-      {/* Action: Open AI Chat */}
-      <Link
-        to="/ai-chat"
-        className="block w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl text-center hover:opacity-90 transition-opacity shadow-lg"
-      >
+      {/* CTA */}
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl text-center shadow-lg group-hover:opacity-90 transition-opacity">
         <span className="flex items-center justify-center gap-2">
           <Sparkles className="w-4 h-4" />
           Chat with AI Coach
         </span>
-      </Link>
+      </div>
 
       <div className="text-xs text-center text-gray-500 dark:text-gray-400">
         Get mood analysis, goal planning &amp; motivation

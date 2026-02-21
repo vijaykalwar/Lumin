@@ -6,7 +6,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lumin-afl6.onrender.com/api';
 const API_TIMEOUT = 30000;  // 30s — handles Render free tier cold start
 const AUTH_TIMEOUT = 35000; // 35s — login/register on first hit after sleep
-const AI_TIMEOUT = 18000;   // 18s for AI
+const AI_TIMEOUT = 60000;   // 60s for AI — Render cold start + Gemini can take 40s+
 
 console.log('🌐 API Base URL:', API_BASE_URL);
 
