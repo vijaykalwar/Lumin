@@ -401,10 +401,10 @@ function Dashboard() {
                   unlockedBadges={userData?.badges || []}
                 />
                 <Link
-                  to="/achievements"
-                  className="mt-4 block w-full text-center py-2 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium"
+                  to="/profile"
+                   className="mt-4 block w-full text-center py-2 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium"
                 >
-                  View All Badges →
+                   View All Badges →
                 </Link>
               </div>
 
