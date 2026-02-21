@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { showToast } from '../utils/toast';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 const API_BASE = API_URL.replace('/api', '');
 
 export default function ForgotPassword() {

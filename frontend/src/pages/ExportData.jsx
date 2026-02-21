@@ -4,7 +4,7 @@ import { showToast } from '../utils/toast';
 import Navbar from '../components/Navbar';
 import BottomNav from '../components/BottomNav';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function ExportData() {
   const token = localStorage.getItem('token');

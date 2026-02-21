@@ -6,7 +6,7 @@ import { authAPI } from '../utils/api';
 import { showToast } from '../utils/toast';
 
 // Backend base URL for wake-up ping (strip /api suffix)
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '');
 
 function Login() {
   const [formData, setFormData] = useState({
