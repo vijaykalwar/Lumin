@@ -54,23 +54,8 @@ const corsOptions = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  // Production: Allow specific origins
-  const allowedOrigins = process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-    : [];
-  
-  if (allowedOrigins.length === 0) {
-    console.warn('⚠️  WARNING: No ALLOWED_ORIGINS set in production. Using default origin.');
-    corsOptions.origin = process.env.FRONTEND_URL || 'http://localhost:5173';
-  } else {
-    corsOptions.origin = (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    };
-  }
+  // Production: Allow all origins temporarily for testing
+  corsOptions.origin = true;
 } else {
   // Development: Allow all origins
   corsOptions.origin = true;
