@@ -64,8 +64,8 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Handle preflight OPTIONS requests explicitly
-app.options('*', cors(corsOptions));
+// Handle preflight OPTIONS requests explicitly (regex for Express 5 compatibility)
+app.options(/.*/, cors(corsOptions));
 app.use(cors(corsOptions));
 
 // ✅ Helmet - Security headers (configured to NOT block CORS)
