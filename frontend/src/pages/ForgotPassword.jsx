@@ -4,7 +4,6 @@ import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { showToast } from '../utils/toast';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
-const API_BASE = API_URL.replace('/api', '');
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');

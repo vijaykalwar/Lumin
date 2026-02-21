@@ -43,25 +43,38 @@ const app = express();
 // SECURITY MIDDLEWARE
 // ════════════════════════════════════════════════════════════
 
-// ✅ Helmet - Security headers
-app.use(helmet());
+// ✅ CORS - Must come BEFORE helmet so CORS headers are set first
+const allowedOrigins = [
+  'https://lumin-app.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
 
-// ✅ CORS - Configure based on environment
 const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Render health checks)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // Allow all origins for now (tighten later if needed)
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 };
 
-if (process.env.NODE_ENV === 'production') {
-  // Production: Allow all origins temporarily for testing
-  corsOptions.origin = true;
-} else {
-  // Development: Allow all origins
-  corsOptions.origin = true;
-}
-
+// Handle preflight OPTIONS requests explicitly
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
+
+// ✅ Helmet - Security headers (configured to NOT block CORS)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'unsafe-none' },
+}));
 
 // ✅ Response compression
 app.use(compression());

@@ -4,7 +4,7 @@
 .env
 .env.local
 .env.development
-*.env
+backend/.env
 
 # ═══════════════════════════════════════════════════════
 # 📦 NODE MODULES - Bahut badi folder hai, skip karo
