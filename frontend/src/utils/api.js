@@ -206,7 +206,44 @@ export const authAPI = {
       return { success: false, message: error.message };
     }
   },
+
+  forgotPassword: async (email) => {
+    try {
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/auth/forgot-password`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        },
+        AUTH_TIMEOUT
+      );
+      return await response.json();
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  },
+
+  resetPassword: async (token, password, confirmPassword) => {
+    try {
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/auth/reset-password/${token}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password, confirmPassword }),
+        },
+        AUTH_TIMEOUT
+      );
+      return await response.json();
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  },
 };
+
+// Export API_BASE_URL for pages that need it (e.g. health-check pings)
+export { API_BASE_URL };
 
 // ════════════════════════════════════════════════════════════
 // STATS API CALLS

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { showToast } from '../utils/toast';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+import { authAPI, API_BASE_URL } from '../utils/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -12,7 +11,7 @@ export default function ForgotPassword() {
 
   // Wake up Render backend as soon as page loads
   useEffect(() => {
-    fetch(`${API_URL}/health`, { method: 'GET' }).catch(() => {});
+    fetch(`${API_BASE_URL}/health`, { method: 'GET' }).catch(() => {});
   }, []);
 
   const handleSubmit = async (e) => {
@@ -26,19 +25,7 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
-      // Use fetch with 35s timeout (handles Render cold start)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 35000);
-
-      const response = await fetch(`${API_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      const data = await response.json();
+      const data = await authAPI.forgotPassword(email);
 
       if (data.success) {
         setEmailSent(true);
@@ -47,7 +34,7 @@ export default function ForgotPassword() {
         showToast.error(data.message || 'Failed to send reset email');
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error.message?.includes('timeout') || error.message?.includes('Timeout')) {
         showToast.error('Server is waking up, please try again in 10 seconds.');
       } else {
         showToast.error('Network error. Please check your connection.');

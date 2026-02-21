@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Lock, ArrowLeft, Loader2, Eye, EyeOff, CheckCircle } from 'lucide-react';
-import axios from 'axios';
 import { showToast } from '../utils/toast';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+import { authAPI } from '../utils/api';
 
 export default function ResetPassword() {
   const { token } = useParams();
@@ -39,12 +37,9 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/auth/reset-password/${token}`, {
-        password,
-        confirmPassword
-      });
+      const data = await authAPI.resetPassword(token, password, confirmPassword);
 
-      if (response.data.success) {
+      if (data.success) {
         setResetSuccess(true);
         showToast.success('Password reset successful!');
         
@@ -52,9 +47,11 @@ export default function ResetPassword() {
         setTimeout(() => {
           navigate('/login');
         }, 3000);
+      } else {
+        showToast.error(data.message || 'Failed to reset password');
       }
     } catch (error) {
-      showToast.error(error.response?.data?.message || 'Failed to reset password');
+      showToast.error(error.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
