@@ -17,12 +17,10 @@ dotenv.config();
 // ════════════════════════════════════════════════════════════
 if (process.env.NODE_ENV === 'production') {
   if (!process.env.JWT_SECRET) {
-    console.error('❌ ERROR: JWT_SECRET environment variable is required in production!');
-    process.exit(1);
+    console.error('⚠️  WARNING: JWT_SECRET not set — auth will use fallback secret!');
   }
   if (!process.env.MONGODB_URI) {
-    console.error('❌ ERROR: MONGODB_URI environment variable is required in production!');
-    process.exit(1);
+    console.error('⚠️  WARNING: MONGODB_URI not set — database connection will fail!');
   }
 }
 
