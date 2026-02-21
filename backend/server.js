@@ -40,7 +40,7 @@ const app = express();
 // ════════════════════════════════════════════════════════════
 // TRUST PROXY - Required for Render/Heroku
 // ════════════════════════════════════════════════════════════
-app.set('trust proxy', true);
+app.set('trust proxy', 1); // Trust 1 proxy hop (Render load balancer) - required for express-rate-limit
 
 // ════════════════════════════════════════════════════════════
 // SECURITY MIDDLEWARE
