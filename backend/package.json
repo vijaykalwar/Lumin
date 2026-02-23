@@ -6,7 +6,11 @@
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
-  "keywords": ["lumin", "productivity", "api"],
+  "keywords": [
+    "lumin",
+    "productivity",
+    "api"
+  ],
   "author": "Vijay Kalwar",
   "license": "ISC",
   "description": "LUMIN Productivity Dashboard Backend API",
@@ -15,7 +19,7 @@
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "compression": "^1.8.1",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
