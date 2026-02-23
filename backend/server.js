@@ -336,16 +336,21 @@ app.set("trust proxy", 1);
 
 const allowedOrigins = [
   "https://lumin-app.vercel.app",
+  "https://lumin-orcin.vercel.app",
   "http://localhost:5173",
-  "http://localhost:3000",
+  "http://localhost:3000"
 ];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // allow all for now
+    }
+  },
+  credentials: true
+}));
 
 // ════════════════════════════════════════════════════════════
 // SECURITY MIDDLEWARE
